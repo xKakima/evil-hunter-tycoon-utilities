@@ -1,8 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -22,7 +23,7 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
         ),
-        home: MyHomePage(),
+        home: const MyHomePage(),
       ),
     );
   }
@@ -39,7 +40,9 @@ class HunterState extends ChangeNotifier {
     newHunter = Hunter();
     savedHunters.add(newHunter);
     notifyListeners();
-    print("Created Hunter");
+    if (kDebugMode) {
+      print("Created Hunter");
+    }
   }
 }
 
@@ -76,6 +79,8 @@ class Hunter {
 }
 
 class MyHomePage extends StatefulWidget {
+  const MyHomePage({super.key});
+
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
@@ -94,18 +99,20 @@ class _MyHomePageState extends State<MyHomePage> {
             Expanded(
               child: Container(
                 color: Theme.of(context).colorScheme.primaryContainer,
-                child: GearBuilder(),
+                child: const GearBuilder(),
               ),
             ),
           ],
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () {
-            print("Creating Hunter");
+            if (kDebugMode) {
+              print("Creating Hunter");
+            }
             hunterState.createHunter();
           },
-          child: Padding(
-            padding: const EdgeInsets.all(2.0),
+          child: const Padding(
+            padding: EdgeInsets.all(2.0),
             child: FittedBox(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -125,6 +132,8 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 class GearBuilder extends StatefulWidget {
+  const GearBuilder({super.key});
+
   @override
   State<GearBuilder> createState() => _GearBuilderState();
 }
@@ -137,7 +146,7 @@ class _GearBuilderState extends State<GearBuilder> {
     return Padding(
       padding: const EdgeInsets.all(20.0),
       child: GridView.builder(
-        gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
           maxCrossAxisExtent: 750, // Maximum pixel width of a grid item
           childAspectRatio: 3 / 2, // Width/Height ratio of grid items
           crossAxisSpacing: 20, // Horizontal spacing between grid items
@@ -151,12 +160,12 @@ class _GearBuilderState extends State<GearBuilder> {
               //Make border curved
               borderRadius: BorderRadius.circular(12),
             ),
-            padding: EdgeInsets.all(10),
+            padding: const EdgeInsets.all(10),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 TextFormField(
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'Hunter Name',
                     border: OutlineInputBorder(),
                   ),
@@ -167,9 +176,13 @@ class _GearBuilderState extends State<GearBuilder> {
                   value: classDropDownValue,
                   onChanged: (newValue) {
                     setState(() {
-                      print("previous Value $classDropDownValue");
+                      if (kDebugMode) {
+                        print("previous Value $classDropDownValue");
+                      }
                       classDropDownValue = newValue.toString();
-                      print("new Value $classDropDownValue");
+                      if (kDebugMode) {
+                        print("new Value $classDropDownValue");
+                      }
                     });
                     // print("new Value $newValue");
                     // hunterState.newHunter.hunterClass =
@@ -185,9 +198,11 @@ class _GearBuilderState extends State<GearBuilder> {
                 )),
                 ElevatedButton(
                     onPressed: () {
-                      print('Save Hunter');
+                      if (kDebugMode) {
+                        print('Save Hunter');
+                      }
                     },
-                    child: Text('Save Hunter '))
+                    child: const Text('Save Hunter '))
               ],
             ),
           );
