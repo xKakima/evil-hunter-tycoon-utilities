@@ -1,6 +1,6 @@
 # evil_hunter_tycoon_utilities
 
-A new Flutter project.
+An Evil Hunters Tycoon utilities app made by Kakima
 
 ## Getting Started
 

@@ -1,213 +1,175 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-void main() {
-  runApp(const MyApp());
+import 'dart:convert';
+
+import './home.dart';
+import 'gear_builder.dart';
+
+Future<void> main() async {
+  await Supabase.initialize(
+    url: 'https://xyzcompany.supabase.co',
+    anonKey:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4cWd0dnFqYWx4bGtkbXN1d3hyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDg3NjM5MTQsImV4cCI6MjAyNDMzOTkxNH0.WjpW_9D9md2w6EYta6QvzyU_B9Xh-aln2_e_0imXuEc',
+  );
+
+  runApp(const EHTApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class EHTApp extends StatelessWidget {
+  const EHTApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (context) => BuilderState()),
         ChangeNotifierProvider(create: (context) => HunterState()),
+        ChangeNotifierProvider(create: (context) => GearState()),
         // Add more providers as needed
       ],
       child: MaterialApp(
-        title: 'Evil Hunter Tycoon Helper',
+        title: 'Evil Hunter Tycoon Helper by Kakima',
         theme: ThemeData(
           useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
+          colorScheme: ColorScheme.fromSeed(
+              seedColor: Color.fromARGB(255, 207, 227, 240)),
         ),
-        home: const MyHomePage(),
+        home: const MainAppPage(),
       ),
     );
   }
 }
 
-class BuilderState extends ChangeNotifier {}
+class MainAppPage extends StatefulWidget {
+  const MainAppPage({super.key});
+
+  @override
+  State<MainAppPage> createState() => _MainAppPageState();
+}
+
+class _MainAppPageState extends State<MainAppPage> {
+  var selectedIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget page;
+    switch (selectedIndex) {
+      case 0:
+        page = const HomePage();
+        break;
+      case 1:
+        page = const GearBuilderPage();
+        break;
+      default:
+        throw UnimplementedError('no widget for $selectedIndex');
+    }
+    return LayoutBuilder(builder: (context, constraints) {
+      return Scaffold(
+        body: homeBody(constraints, context, page),
+      );
+    });
+  }
+
+  Row homeBody(BoxConstraints constraints, BuildContext context, Widget page) {
+    return Row(
+      children: [
+        SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: NavigationRail(
+                  backgroundColor: const Color.fromARGB(255, 118, 177, 225),
+                  extended: constraints.maxWidth >= 600,
+                  leading: const Flexible(
+                      child: Text('EHT Helper by Kakima',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ))),
+                  destinations: const [
+                    NavigationRailDestination(
+                      icon: Icon(Icons.home_filled),
+                      label: Text('Home'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.build),
+                      label: Text('Gear Builder'),
+                    ),
+                  ],
+                  selectedIndex: selectedIndex,
+                  onDestinationSelected: (value) {
+                    setState(() {
+                      selectedIndex = value;
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: Container(
+            color: Theme.of(context).colorScheme.primaryContainer,
+            child: page,
+          ),
+        ),
+      ],
+    );
+  }
+}
 
 class HunterState extends ChangeNotifier {
   late Hunter newHunter;
 
+// Update this add a new list since savedHunters should only contain hunters that are "SAVED" not only created
   var savedHunters = <Hunter>[];
 
   void createHunter() {
-    newHunter = Hunter();
+    newHunter = Hunter(
+        name: "New Hunter",
+        hunterClass: hunterClasses["Berserker"],
+        stats: {
+          "HP": 0,
+          "Attack": 0,
+          "Defense": 0,
+          "CritChance": 0,
+          "AttackSpeed": 0,
+          "Evasion": 0,
+        });
     savedHunters.add(newHunter);
     notifyListeners();
     if (kDebugMode) {
       print("Created Hunter");
     }
   }
-}
 
-Map<String, HunterBaseClass> hunterClasses = {
-  "Berserker": HunterBaseClass("Berserker", ["duelist", "warrior", "slayer"],
-      ["barbarian", "swordSaint", "destroyer"]),
-  "Sorceror": HunterBaseClass("Sorceror", ["archMage", "darkMage", "ignis"],
-      ["conjuror", "darkLord", "illusionist"]),
-  "Paladin": HunterBaseClass("Paladin", ["crusader", "templar", "darkPaladin"],
-      ["guardian", "inquisitor", "executor"]),
-  "Archer": HunterBaseClass("Archer", ["duelist", "warrior", "slayer"],
-      ["ministrel", "scout", "arcaneArcher"]),
-};
+  void saveHunter(name) {
+    newHunter.name = name;
+    savedHunters.add(newHunter);
+    // saveData('$name', 'test');
+    if (kDebugMode) {
+      print("saved Hunters $savedHunters");
+    }
+    // Assuming savedHunters is your list of Hunter instances
+    String savedHuntersJson =
+        jsonEncode(savedHunters.map((hunter) => hunter.toJson()).toList());
 
-class HunterBaseClass {
-  final String name;
-  final List<String> secondJobs;
-  final List<String> thirdJobs;
-
-  HunterBaseClass(this.name, this.secondJobs, this.thirdJobs);
-}
-
-class Hunter {
-  var name = "New Hunter";
-  var hunterClass = hunterClasses["Berserker"];
-  var stats = {
-    "HP": 0,
-    "Attack": 0,
-    "Defense": 0,
-    "CritChance": 0,
-    "AttackSpeed": 0,
-    "Evasion": 0,
-  };
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  var selectedIndex = 0;
-
-  @override
-  Widget build(BuildContext context) {
-    var hunterState = context.watch<HunterState>();
-
-    return LayoutBuilder(builder: (context, constraints) {
-      return Scaffold(
-        body: Row(
-          children: [
-            Expanded(
-              child: Container(
-                color: Theme.of(context).colorScheme.primaryContainer,
-                child: const GearBuilder(),
-              ),
-            ),
-          ],
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            if (kDebugMode) {
-              print("Creating Hunter");
-            }
-            hunterState.createHunter();
-          },
-          child: const Padding(
-            padding: EdgeInsets.all(2.0),
-            child: FittedBox(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Icon(Icons.add),
-                  SizedBox(height: 2), // Add spacing
-                  Text("New Hunter", style: TextStyle(fontSize: 16.0)),
-                ],
-              ),
-            ),
-          ),
-        ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      );
-    });
+// Then, you can call the save method on your Storage instance
+    // Storage().save("Hunters", savedHuntersJson);
   }
-}
 
-class GearBuilder extends StatefulWidget {
-  const GearBuilder({super.key});
+  // void saveData(key, value) async {
+  //   final storage = Storage();
+  //   storage.save(key, value);
+  // }
 
-  @override
-  State<GearBuilder> createState() => _GearBuilderState();
-}
-
-class _GearBuilderState extends State<GearBuilder> {
-  @override
-  Widget build(BuildContext context) {
-    var hunterState = context.watch<HunterState>();
-    var classDropDownValue = "Berserker";
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: GridView.builder(
-        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-          maxCrossAxisExtent: 750, // Maximum pixel width of a grid item
-          childAspectRatio: 3 / 2, // Width/Height ratio of grid items
-          crossAxisSpacing: 20, // Horizontal spacing between grid items
-          mainAxisSpacing: 20, // Vertical spacing between grid items
-        ),
-        itemCount: hunterState.savedHunters.length,
-        itemBuilder: (context, index) {
-          return Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.black),
-              //Make border curved
-              borderRadius: BorderRadius.circular(12),
-            ),
-            padding: const EdgeInsets.all(10),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                TextFormField(
-                  decoration: const InputDecoration(
-                    labelText: 'Hunter Name',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                Expanded(
-                    child: DropdownButtonFormField(
-                  isExpanded: true,
-                  value: classDropDownValue,
-                  onChanged: (newValue) {
-                    setState(() {
-                      if (kDebugMode) {
-                        print("previous Value $classDropDownValue");
-                      }
-                      classDropDownValue = newValue.toString();
-                      if (kDebugMode) {
-                        print("new Value $classDropDownValue");
-                      }
-                    });
-                    // print("new Value $newValue");
-                    // hunterState.newHunter.hunterClass =
-                    //     newValue! as HunterBaseClass?;
-                  },
-                  items: hunterClasses.keys
-                      .map<DropdownMenuItem<String>>((String key) {
-                    return DropdownMenuItem<String>(
-                      value: key,
-                      child: Center(child: Text(key)),
-                    );
-                  }).toList(),
-                )),
-                ElevatedButton(
-                    onPressed: () {
-                      if (kDebugMode) {
-                        print('Save Hunter');
-                      }
-                    },
-                    child: const Text('Save Hunter '))
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
+  // void loadHunters() async {
+  //   final storage = Storage();
+  //   if (kDebugMode) {
+  //     print(storage.load('Hunters'));
+  //   }
+  // }
 }
