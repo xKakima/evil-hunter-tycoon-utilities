@@ -229,7 +229,7 @@ class _GearBuilderPageState extends State<GearBuilderPage> {
   @override
   void initState() {
     super.initState();
-    var hunterState = context.read<HunterState>();
+    // var hunterState = context.read<HunterState>();
 
     // hunterState.loadHunters();
     // Add your on-mount code here.
@@ -249,7 +249,7 @@ class _GearBuilderPageState extends State<GearBuilderPage> {
 
   @override
   Widget build(BuildContext context) {
-    var hunterState = context.watch<HunterState>();
+    // var hunterState = context.watch<HunterState>();
 
     return LayoutBuilder(builder: (context, constraints) {
       return Scaffold(

@@ -1,16 +1,15 @@
+import 'package:evil_hunter_tycoon_utilities/login.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
-import 'dart:convert';
 
 import './home.dart';
 import 'gear_builder.dart';
 
 Future<void> main() async {
   await Supabase.initialize(
-    url: 'https://xyzcompany.supabase.co',
+    url: 'https://qxqgtvqjalxlkdmsuwxr.supabase.co',
     anonKey:
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4cWd0dnFqYWx4bGtkbXN1d3hyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDg3NjM5MTQsImV4cCI6MjAyNDMzOTkxNH0.WjpW_9D9md2w6EYta6QvzyU_B9Xh-aln2_e_0imXuEc',
   );
@@ -34,7 +33,7 @@ class EHTApp extends StatelessWidget {
         theme: ThemeData(
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(
-              seedColor: Color.fromARGB(255, 207, 227, 240)),
+              seedColor: const Color.fromARGB(255, 207, 227, 240)),
         ),
         home: const MainAppPage(),
       ),
@@ -57,9 +56,11 @@ class _MainAppPageState extends State<MainAppPage> {
     Widget page;
     switch (selectedIndex) {
       case 0:
+      page = const LoginPage();
+      case 1:
         page = const HomePage();
         break;
-      case 1:
+      case 2:
         page = const GearBuilderPage();
         break;
       default:
@@ -154,8 +155,8 @@ class HunterState extends ChangeNotifier {
       print("saved Hunters $savedHunters");
     }
     // Assuming savedHunters is your list of Hunter instances
-    String savedHuntersJson =
-        jsonEncode(savedHunters.map((hunter) => hunter.toJson()).toList());
+    // String savedHuntersJson =
+    //     jsonEncode(savedHunters.map((hunter) => hunter.toJson()).toList());
 
 // Then, you can call the save method on your Storage instance
     // Storage().save("Hunters", savedHuntersJson);
