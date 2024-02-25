@@ -35,7 +35,7 @@ class EHTApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(
               seedColor: const Color.fromARGB(255, 207, 227, 240)),
         ),
-        home: const MainAppPage(),
+        home: const LoginPage(),
       ),
     );
   }
@@ -56,11 +56,9 @@ class _MainAppPageState extends State<MainAppPage> {
     Widget page;
     switch (selectedIndex) {
       case 0:
-      page = const LoginPage();
-      case 1:
         page = const HomePage();
         break;
-      case 2:
+      case 1:
         page = const GearBuilderPage();
         break;
       default:

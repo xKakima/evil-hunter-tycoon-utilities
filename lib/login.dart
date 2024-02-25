@@ -6,10 +6,11 @@ class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
 
   Future<void> _handleSignIn() async {
-    final response = await Supabase.instance.client.auth.signInWithOAuth(OAuthProvider.google);
-  if (kDebugMode) {
-    print(response);
-  }
+    final response = await Supabase.instance.client.auth
+        .signInWithOAuth(OAuthProvider.google);
+    if (kDebugMode) {
+      print(response);
+    }
     // if (response != null) {
     //   // Handle error
     // } else {
@@ -19,9 +20,16 @@ class LoginPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton(
-      onPressed: _handleSignIn,
-      child: const Text('Sign in with Google'),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Welcome to Kakima\'s Evil Hunter Tycoon Utilities'),
+      ),
+      body: Center(
+        child: OutlinedButton(
+          onPressed: _handleSignIn,
+          child: const Text('Sign in with Google'),
+        ),
+      ),
     );
   }
 }
