@@ -1,3 +1,4 @@
+import 'package:evil_hunter_tycoon_utilities/database/hunters_table.dart';
 import 'package:evil_hunter_tycoon_utilities/main.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -36,7 +37,7 @@ class HunterBuilderState extends State<HunterBuilder> {
         ),
         itemCount: hunterState.savedHunters.length,
         itemBuilder: (context, index) {
-          final inputFieldController = TextEditingController();
+          final inputFieldController = TextEditingController(text: hunterState.savedHunters[index].name);
           return Container(
             decoration: BoxDecoration(
               border: Border.all(color: Colors.black),
@@ -195,23 +196,22 @@ class Hunter {
     "Evasion": 0,
   };
 
-  Hunter({required this.name, required this.hunterClass, required this.stats});
+  Hunter(
+      {required this.name,
+      HunterBaseClass? hunterClass,
+      Map<String, int>? stats});
 
   Map<String, dynamic> toJson() {
     return {
-      // Include fields from HunterBaseClass
-      // Include fields from Hunter
       'name': name,
-      'hunterClass': hunterClass,
-      'stats': stats,
     };
   }
 
   factory Hunter.fromJson(Map<String, dynamic> json) {
+    print("Hunter from json: $json");
+
     return Hunter(
       name: json['name'],
-      hunterClass: json['hunterClass'],
-      stats: Map<String, int>.from(json['stats']),
     );
   }
 }
@@ -223,28 +223,37 @@ class HunterPage extends StatefulWidget {
   State<HunterPage> createState() => _HunterPageState();
 }
 
+Hunter parseHunterFromJson(Map<String, dynamic> json) {
+  print("Parsing Hunter from Json: $json");
+  return Hunter(name: json['name']);
+}
+
 class _HunterPageState extends State<HunterPage> {
   var selectedIndex = 0;
+  List<Hunter> hunters = [];
+  bool _fetchedHunters = false;
 
   @override
-  void initState() {
-    super.initState();
-    // var hunterState = context.read<HunterState>();
-
-    // hunterState.loadHunters();
-    // Add your on-mount code here.
-  }
-
-  @override
-  void didChangeDependencies() {
+  Future<void> didChangeDependencies() async {
     super.didChangeDependencies();
 
-    var hunterState = context.read<HunterState>();
+    if (!_fetchedHunters) {
+      var hunterState = context.read<HunterState>();
 
-    if (hunterState.savedHunters.isEmpty) {
-      Future.microtask(() => hunterState.createHunter());
+      var response = await fetchHunters();
+      print(response);
+      print("is hunters empty: ${response.isEmpty}");
+
+      if (response.isEmpty) {
+        Future.microtask(() => hunterState.createHunter());
+      } else {
+        response.forEach((hunter) => hunters.add(parseHunterFromJson(hunter)));
+        hunterState.saveHuntersFromDatabase(hunters);
+        print(hunterState.savedHunters);
+      }
+
+      _fetchedHunters = true;
     }
-    // Initialization that depends on the BuildContext can go here.
   }
 
   @override
@@ -263,6 +272,39 @@ class _HunterPageState extends State<HunterPage> {
             ),
           ],
         ),
+        floatingActionButton: LayoutBuilder(
+          builder: (context, constraints) {
+            double buttonSize = constraints.biggest.width * 0.15;
+            double clampedSize = buttonSize.clamp(60.0, 100.0);
+
+            return Container(
+              width: clampedSize,
+              height: clampedSize,
+              child: FloatingActionButton(
+                onPressed: () {
+                  if (kDebugMode) {
+                    print("Creating Hunter");
+                  }
+                  // hunterState.createHunter();
+                },
+                child: const Padding(
+                  padding: EdgeInsets.all(10.0),
+                  child: FittedBox(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Icon(Icons.add, size: 30.0),
+                        SizedBox(height: 5), // Add spacing
+                        Text("New Hunter", style: TextStyle(fontSize: 16.0)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       );
     });
   }

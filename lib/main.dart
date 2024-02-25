@@ -1,20 +1,21 @@
 import 'dart:async';
 
+import 'package:evil_hunter_tycoon_utilities/database/hunters_table.dart';
 import 'package:evil_hunter_tycoon_utilities/login.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import './home.dart';
+// import './home.dart';
 import 'hunter.dart';
 
 Future<void> main() async {
   await Supabase.initialize(
-    url: 'https://qxqgtvqjalxlkdmsuwxr.supabase.co',
-    anonKey:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4cWd0dnFqYWx4bGtkbXN1d3hyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDg3NjM5MTQsImV4cCI6MjAyNDMzOTkxNH0.WjpW_9D9md2w6EYta6QvzyU_B9Xh-aln2_e_0imXuEc',
-  );
+      url: 'https://qxqgtvqjalxlkdmsuwxr.supabase.co',
+      anonKey:
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4cWd0dnFqYWx4bGtkbXN1d3hyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDg3NjM5MTQsImV4cCI6MjAyNDMzOTkxNH0.WjpW_9D9md2w6EYta6QvzyU_B9Xh-aln2_e_0imXuEc',
+      postgrestOptions: PostgrestClientOptions(schema: 'eht'));
 
   runApp(const EHTApp());
 }
@@ -89,15 +90,12 @@ class MainAppPage extends StatefulWidget {
 
 class _MainAppPageState extends State<MainAppPage> {
   var selectedIndex = 0;
-  final pageTitles = ['Gear Builder', 'Settings'];
+  final pageTitles = ['Hunters', 'Settings'];
 
   @override
   Widget build(BuildContext context) {
     Widget page;
     switch (selectedIndex) {
-      // case 5:
-      //   page = const HomePage();
-      //   break;
       case 0:
         page = const HunterPage();
         break;
@@ -121,16 +119,6 @@ class _MainAppPageState extends State<MainAppPage> {
                 color: Colors.blue,
               ),
             ),
-            // ListTile(
-            //   leading: Icon(Icons.home),
-            //   title: Text('Home'),
-            //   onTap: () {
-            //     setState(() {
-            //       selectedIndex = 5;
-            //     });
-            //     Navigator.pop(context);
-            //   },
-            // ),
             ListTile(
               leading: Icon(Icons.build),
               title: Text('Gear Builder'),
@@ -155,39 +143,6 @@ class _MainAppPageState extends State<MainAppPage> {
         ),
       ),
       body: page,
-      floatingActionButton: LayoutBuilder(
-        builder: (context, constraints) {
-          double buttonSize = constraints.biggest.width * 0.15;
-          double clampedSize = buttonSize.clamp(60.0, 100.0);
-
-          return Container(
-            width: clampedSize,
-            height: clampedSize,
-            child: FloatingActionButton(
-              onPressed: () {
-                if (kDebugMode) {
-                  print("Creating Hunter");
-                }
-                // hunterState.createHunter();
-              },
-              child: const Padding(
-                padding: EdgeInsets.all(10.0),
-                child: FittedBox(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Icon(Icons.add, size: 30.0),
-                      SizedBox(height: 5), // Add spacing
-                      Text("New Hunter", style: TextStyle(fontSize: 16.0)),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }
@@ -217,30 +172,18 @@ class HunterState extends ChangeNotifier {
     }
   }
 
+  void saveHuntersFromDatabase(hunters) {
+    print("hunters from db ${hunters}");
+    savedHunters = hunters;
+    notifyListeners();
+    if (kDebugMode) {
+      print("Saved Hunter");
+    }
+  }
+
   void saveHunter(name) {
     newHunter.name = name;
     savedHunters.add(newHunter);
-    // saveData('$name', 'test');
-    if (kDebugMode) {
-      print("saved Hunters $savedHunters");
-    }
-    // Assuming savedHunters is your list of Hunter instances
-    // String savedHuntersJson =
-    //     jsonEncode(savedHunters.map((hunter) => hunter.toJson()).toList());
-
-// Then, you can call the save method on your Storage instance
-    // Storage().save("Hunters", savedHuntersJson);
+    createOrSaveHunter(name);
   }
-
-  // void saveData(key, value) async {
-  //   final storage = Storage();
-  //   storage.save(key, value);
-  // }
-
-  // void loadHunters() async {
-  //   final storage = Storage();
-  //   if (kDebugMode) {
-  //     print(storage.load('Hunters'));
-  //   }
-  // }
 }

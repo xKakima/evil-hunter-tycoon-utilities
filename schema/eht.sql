@@ -16,6 +16,7 @@ CREATE TABLE eht.gears (
     CONSTRAINT gears_pkey PRIMARY KEY (id)
 
 );
+ALTER TABLE eht.gears ENABLE ROW LEVEL SECURITY;
 
 CREATE TABLE
     eht.hunters (
@@ -27,6 +28,7 @@ CREATE TABLE
         CONSTRAINT hunters_pkey PRIMARY KEY (id),
         CONSTRAINT fk_users FOREIGN KEY (id) REFERENCES auth.users (id)
     );
+ALTER TABLE eht.hunters ENABLE ROW LEVEL SECURITY;
 
 CREATE TABLE
     eht.stats (
@@ -43,6 +45,7 @@ CREATE TABLE
         CONSTRAINT stats_pkey PRIMARY KEY (hunter_id),
         CONSTRAINT fk_hunters FOREIGN KEY (hunter_id) REFERENCES eht.hunters (id)
     );
+ALTER TABLE eht.stats ENABLE ROW LEVEL SECURITY;
 
 CREATE TABLE
     eht.base_classes (
@@ -74,6 +77,7 @@ CREATE TABLE
         CONSTRAINT third_classes_pkey PRIMARY KEY (id),
         CONSTRAINT fk_base_classes FOREIGN KEY (base_class_id) REFERENCES eht.base_classes (id)
     );
+    
 
 -- Insert Initial Data
 
@@ -181,3 +185,10 @@ CREATE TRIGGER create_stats_after_insert
 AFTER INSERT ON eht.hunters
 FOR EACH ROW
 EXECUTE FUNCTION eht.create_stats();
+
+create policy "Users can view their own data" on auth.users
+for select
+using ( auth.uid() = auth.users.id );
+
+GRANT USAGE ON SCHEMA eht TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA eht TO authenticated;
