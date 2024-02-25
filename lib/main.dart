@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:evil_hunter_tycoon_utilities/login.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -5,7 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import './home.dart';
-import 'gear_builder.dart';
+import 'hunter.dart';
 
 Future<void> main() async {
   await Supabase.initialize(
@@ -17,8 +19,35 @@ Future<void> main() async {
   runApp(const EHTApp());
 }
 
-class EHTApp extends StatelessWidget {
-  const EHTApp({super.key});
+class EHTApp extends StatefulWidget {
+  const EHTApp({Key? key}) : super(key: key);
+
+  @override
+  _EHTAppState createState() => _EHTAppState();
+}
+
+class _EHTAppState extends State<EHTApp> {
+  User? _user;
+  late StreamSubscription<AuthState> _authStateSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Listen for changes in the user's authentication state
+    _authStateSubscription =
+        Supabase.instance.client.auth.onAuthStateChange.listen((event) {
+      setState(() {
+        _user = event.session?.user;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _authStateSubscription.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,13 +58,23 @@ class EHTApp extends StatelessWidget {
         // Add more providers as needed
       ],
       child: MaterialApp(
-        title: 'Evil Hunter Tycoon Helper by Kakima',
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color.fromARGB(255, 207, 227, 240)),
-        ),
-        home: const LoginPage(),
+        initialRoute: '/',
+        onGenerateRoute: (settings) {
+          // Remove the query parameters from the route name
+          final uri = Uri.parse(settings.name!);
+          final path = uri.path;
+
+          switch (path) {
+            case '/':
+              return MaterialPageRoute(
+                  builder: (context) =>
+                      _user != null ? MainAppPage() : LoginPage());
+            case '/main':
+              return MaterialPageRoute(builder: (context) => MainAppPage());
+            default:
+              return MaterialPageRoute(builder: (context) => LoginPage());
+          }
+        },
       ),
     );
   }
@@ -50,72 +89,105 @@ class MainAppPage extends StatefulWidget {
 
 class _MainAppPageState extends State<MainAppPage> {
   var selectedIndex = 0;
+  final pageTitles = ['Gear Builder', 'Settings'];
 
   @override
   Widget build(BuildContext context) {
     Widget page;
     switch (selectedIndex) {
+      // case 5:
+      //   page = const HomePage();
+      //   break;
       case 0:
-        page = const HomePage();
+        page = const HunterPage();
         break;
       case 1:
-        page = const GearBuilderPage();
+        page = Placeholder();
         break;
       default:
         throw UnimplementedError('no widget for $selectedIndex');
     }
-    return LayoutBuilder(builder: (context, constraints) {
-      return Scaffold(
-        body: homeBody(constraints, context, page),
-      );
-    });
-  }
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('EHT Utilities by Kakima - ${pageTitles[selectedIndex]}'),
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            DrawerHeader(
+              child: Text('Change Current User Name Here'),
+              decoration: BoxDecoration(
+                color: Colors.blue,
+              ),
+            ),
+            // ListTile(
+            //   leading: Icon(Icons.home),
+            //   title: Text('Home'),
+            //   onTap: () {
+            //     setState(() {
+            //       selectedIndex = 5;
+            //     });
+            //     Navigator.pop(context);
+            //   },
+            // ),
+            ListTile(
+              leading: Icon(Icons.build),
+              title: Text('Gear Builder'),
+              onTap: () {
+                setState(() {
+                  selectedIndex = 0;
+                });
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.settings),
+              title: Text('Settings'),
+              onTap: () {
+                setState(() {
+                  selectedIndex = 1;
+                });
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
+      ),
+      body: page,
+      floatingActionButton: LayoutBuilder(
+        builder: (context, constraints) {
+          double buttonSize = constraints.biggest.width * 0.15;
+          double clampedSize = buttonSize.clamp(60.0, 100.0);
 
-  Row homeBody(BoxConstraints constraints, BuildContext context, Widget page) {
-    return Row(
-      children: [
-        SafeArea(
-          child: Column(
-            children: [
-              Expanded(
-                child: NavigationRail(
-                  backgroundColor: const Color.fromARGB(255, 118, 177, 225),
-                  extended: constraints.maxWidth >= 600,
-                  leading: const Flexible(
-                      child: Text('EHT Helper by Kakima',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ))),
-                  destinations: const [
-                    NavigationRailDestination(
-                      icon: Icon(Icons.home_filled),
-                      label: Text('Home'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.build),
-                      label: Text('Gear Builder'),
-                    ),
-                  ],
-                  selectedIndex: selectedIndex,
-                  onDestinationSelected: (value) {
-                    setState(() {
-                      selectedIndex = value;
-                    });
-                  },
+          return Container(
+            width: clampedSize,
+            height: clampedSize,
+            child: FloatingActionButton(
+              onPressed: () {
+                if (kDebugMode) {
+                  print("Creating Hunter");
+                }
+                // hunterState.createHunter();
+              },
+              child: const Padding(
+                padding: EdgeInsets.all(10.0),
+                child: FittedBox(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Icon(Icons.add, size: 30.0),
+                      SizedBox(height: 5), // Add spacing
+                      Text("New Hunter", style: TextStyle(fontSize: 16.0)),
+                    ],
+                  ),
                 ),
               ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: Container(
-            color: Theme.of(context).colorScheme.primaryContainer,
-            child: page,
-          ),
-        ),
-      ],
+            ),
+          );
+        },
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }

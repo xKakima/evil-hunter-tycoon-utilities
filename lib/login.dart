@@ -1,21 +1,11 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
 
-  Future<void> _handleSignIn() async {
-    final response = await Supabase.instance.client.auth
-        .signInWithOAuth(OAuthProvider.google);
-    if (kDebugMode) {
-      print(response);
-    }
-    // if (response != null) {
-    //   // Handle error
-    // } else {
-    //   // Handle success
-    // }
+  Future<void> _handleSignIn(BuildContext context) async {
+    await Supabase.instance.client.auth.signInWithOAuth(OAuthProvider.google);
   }
 
   @override
@@ -26,7 +16,7 @@ class LoginPage extends StatelessWidget {
       ),
       body: Center(
         child: OutlinedButton(
-          onPressed: _handleSignIn,
+          onPressed: () => _handleSignIn(context),
           child: const Text('Sign in with Google'),
         ),
       ),

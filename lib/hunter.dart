@@ -3,14 +3,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class GearBuilder extends StatefulWidget {
-  const GearBuilder({super.key});
+class HunterBuilder extends StatefulWidget {
+  const HunterBuilder({super.key});
 
   @override
-  State<GearBuilder> createState() => _GearBuilderState();
+  State<HunterBuilder> createState() => HunterBuilderState();
 }
 
-class _GearBuilderState extends State<GearBuilder> {
+class HunterBuilderState extends State<HunterBuilder> {
   // Global Widget Variables
   final inputFieldController = TextEditingController(text: "New Hunter");
 
@@ -216,14 +216,14 @@ class Hunter {
   }
 }
 
-class GearBuilderPage extends StatefulWidget {
-  const GearBuilderPage({super.key});
+class HunterPage extends StatefulWidget {
+  const HunterPage({super.key});
 
   @override
-  State<GearBuilderPage> createState() => _GearBuilderPageState();
+  State<HunterPage> createState() => _HunterPageState();
 }
 
-class _GearBuilderPageState extends State<GearBuilderPage> {
+class _HunterPageState extends State<HunterPage> {
   var selectedIndex = 0;
 
   @override
@@ -258,7 +258,7 @@ class _GearBuilderPageState extends State<GearBuilderPage> {
             Expanded(
               child: Container(
                 color: Theme.of(context).colorScheme.primaryContainer,
-                child: const GearBuilder(),
+                child: const HunterBuilder(),
               ),
             ),
           ],
