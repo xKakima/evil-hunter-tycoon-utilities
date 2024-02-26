@@ -1,8 +1,48 @@
 import 'package:evil_hunter_tycoon_utilities/database/hunters_table.dart';
-import 'package:evil_hunter_tycoon_utilities/main.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+class HunterState extends ChangeNotifier {
+  late Hunter newHunter;
+
+// Update this add a new list since savedHunters should only contain hunters that are "SAVED" not only created
+  var savedHunters = <Hunter>[];
+
+  void createHunter() {
+    newHunter = Hunter(
+        name: "New Hunter",
+        hunterClass: hunterClasses["Berserker"],
+        stats: {
+          "HP": 0,
+          "Attack": 0,
+          "Defense": 0,
+          "CritChance": 0,
+          "AttackSpeed": 0,
+          "Evasion": 0,
+        });
+    savedHunters.add(newHunter);
+    notifyListeners();
+    if (kDebugMode) {
+      print("Created Hunter");
+    }
+  }
+
+  void saveHuntersFromDatabase(hunters) {
+    print("hunters from db ${hunters}");
+    savedHunters = hunters;
+    notifyListeners();
+    if (kDebugMode) {
+      print("Saved Hunter");
+    }
+  }
+
+  void saveHunter(name) {
+    newHunter.name = name;
+    savedHunters.add(newHunter);
+    createOrSaveHunter(name);
+  }
+}
 
 class HunterBuilder extends StatefulWidget {
   const HunterBuilder({super.key});
@@ -37,7 +77,8 @@ class HunterBuilderState extends State<HunterBuilder> {
         ),
         itemCount: hunterState.savedHunters.length,
         itemBuilder: (context, index) {
-          final inputFieldController = TextEditingController(text: hunterState.savedHunters[index].name);
+          final inputFieldController =
+              TextEditingController(text: hunterState.savedHunters[index].name);
           return Container(
             decoration: BoxDecoration(
               border: Border.all(color: Colors.black),
