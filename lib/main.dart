@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:evil_hunter_tycoon_utilities/database/hunters_table.dart';
 import 'package:evil_hunter_tycoon_utilities/login.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -28,28 +27,6 @@ class EHTApp extends StatefulWidget {
 }
 
 class _EHTAppState extends State<EHTApp> {
-  User? _user;
-  late StreamSubscription<AuthState> _authStateSubscription;
-
-  @override
-  void initState() {
-    super.initState();
-
-    // Listen for changes in the user's authentication state
-    _authStateSubscription =
-        Supabase.instance.client.auth.onAuthStateChange.listen((event) {
-      setState(() {
-        _user = event.session?.user;
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    _authStateSubscription.cancel();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -68,8 +45,9 @@ class _EHTAppState extends State<EHTApp> {
           switch (path) {
             case '/':
               return MaterialPageRoute(
-                  builder: (context) =>
-                      _user != null ? MainAppPage() : LoginPage());
+                  builder: (context) => supabase.auth.currentUser != null
+                      ? MainAppPage()
+                      : LoginPage());
             case '/main':
               return MaterialPageRoute(builder: (context) => MainAppPage());
             default:
@@ -90,6 +68,7 @@ class MainAppPage extends StatefulWidget {
 
 class _MainAppPageState extends State<MainAppPage> {
   var selectedIndex = 0;
+  var currentUser = supabase.auth.currentUser;
   final pageTitles = ['Hunters', 'Settings'];
 
   @override
@@ -114,7 +93,7 @@ class _MainAppPageState extends State<MainAppPage> {
           padding: EdgeInsets.zero,
           children: <Widget>[
             DrawerHeader(
-              child: Text('Change Current User Name Here'),
+              child: Text('Welcome ${currentUser?.userMetadata?['full_name']}'),
               decoration: BoxDecoration(
                 color: Colors.blue,
               ),
@@ -144,46 +123,5 @@ class _MainAppPageState extends State<MainAppPage> {
       ),
       body: page,
     );
-  }
-}
-
-class HunterState extends ChangeNotifier {
-  late Hunter newHunter;
-
-// Update this add a new list since savedHunters should only contain hunters that are "SAVED" not only created
-  var savedHunters = <Hunter>[];
-
-  void createHunter() {
-    newHunter = Hunter(
-        name: "New Hunter",
-        hunterClass: hunterClasses["Berserker"],
-        stats: {
-          "HP": 0,
-          "Attack": 0,
-          "Defense": 0,
-          "CritChance": 0,
-          "AttackSpeed": 0,
-          "Evasion": 0,
-        });
-    savedHunters.add(newHunter);
-    notifyListeners();
-    if (kDebugMode) {
-      print("Created Hunter");
-    }
-  }
-
-  void saveHuntersFromDatabase(hunters) {
-    print("hunters from db ${hunters}");
-    savedHunters = hunters;
-    notifyListeners();
-    if (kDebugMode) {
-      print("Saved Hunter");
-    }
-  }
-
-  void saveHunter(name) {
-    newHunter.name = name;
-    savedHunters.add(newHunter);
-    createOrSaveHunter(name);
   }
 }
