@@ -2,15 +2,32 @@ DROP SCHEMA IF EXISTS eht CASCADE;
 
 CREATE SCHEMA eht;
 
-CREATE TYPE eht.hunter_type AS ENUM ('DPS', 'Tank');
-CREATE TYPE eht.gear_type AS ENUM ('Weapon', 'Hat', 'Armor', 'Glove', 'Shoe', 'Belt', 'Necklace', 'Ring');
-CREATE TYPE eht.gear_variant AS ENUM ('Ancient', 'Primal', 'Original', 'Chaos');
+DO $$ 
+BEGIN 
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'hunter_type') THEN 
+    CREATE TYPE eht.hunter_type AS ENUM ('DPS', 'Tank'); 
+  END IF; 
+END $$;
 
-CREATE TABLE eht.gears (
+DO $$ 
+BEGIN 
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'gear_type') THEN 
+    CREATE TYPE eht.gear_type AS ENUM ('Weapon', 'Hat', 'Armor', 'Glove', 'Shoe', 'Belt', 'Necklace', 'Ring'); 
+  END IF; 
+END $$;
+
+DO $$ 
+BEGIN 
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'gear_variant') THEN 
+    CREATE TYPE eht.gear_variant AS ENUM ('Ancient', 'Primal', 'Original', 'Chaos'); 
+  END IF; 
+END $$;
+
+CREATE TABLE IF NOT EXISTS eht.gears (
     id UUID NOT NULL DEFAULT uuid_generate_v4 (),
     name varchar(255) NOT NULL,
-    type gear_type NOT NULL DEFAULT 'Weapon',
-    variant gear_variant NOT NULL DEFAULT 'Ancient',
+    gear_type eht.gear_type NOT NULL DEFAULT 'Weapon',
+    variant eht.gear_variant NOT NULL DEFAULT 'Ancient',
     created_at timestamp without time zone NOT NULL DEFAULT now (),
     updated_at timestamp without time zone NOT NULL DEFAULT now (),
     CONSTRAINT gears_pkey PRIMARY KEY (id)
@@ -18,19 +35,20 @@ CREATE TABLE eht.gears (
 );
 ALTER TABLE eht.gears ENABLE ROW LEVEL SECURITY;
 
-CREATE TABLE
+CREATE TABLE IF NOT EXISTS
     eht.hunters (
-        id UUID NOT NULL,
+        user_id UUID NOT NULL,
+        hunter_id UUID NOT NULL DEFAULT uuid_generate_v4 (),
         name character varying(255) NOT NULL,
-        type eht.hunter_type DEFAULT 'DPS',
+        hunter_type eht.hunter_type DEFAULT 'DPS',
         created_at timestamp without time zone NOT NULL DEFAULT now (),
         updated_at timestamp without time zone NOT NULL DEFAULT now (),
-        CONSTRAINT hunters_pkey PRIMARY KEY (id),
-        CONSTRAINT fk_users FOREIGN KEY (id) REFERENCES auth.users (id)
+        CONSTRAINT hunters_pkey PRIMARY KEY (hunter_id),
+        CONSTRAINT fk_users FOREIGN KEY (user_id) REFERENCES auth.users (id)
     );
 ALTER TABLE eht.hunters ENABLE ROW LEVEL SECURITY;
 
-CREATE TABLE
+CREATE TABLE IF NOT EXISTS
     eht.stats (
         hunter_id UUID NOT NULL,
         hp float NOT NULL DEFAULT 0,
@@ -43,11 +61,11 @@ CREATE TABLE
         created_at timestamp without time zone NOT NULL DEFAULT now (),
         updated_at timestamp without time zone NOT NULL DEFAULT now (),
         CONSTRAINT stats_pkey PRIMARY KEY (hunter_id),
-        CONSTRAINT fk_hunters FOREIGN KEY (hunter_id) REFERENCES eht.hunters (id)
+        CONSTRAINT fk_hunters FOREIGN KEY (hunter_id) REFERENCES eht.hunters (hunter_id)
     );
 ALTER TABLE eht.stats ENABLE ROW LEVEL SECURITY;
 
-CREATE TABLE
+CREATE TABLE IF NOT EXISTS
     eht.base_classes (
         id UUID NOT NULL DEFAULT uuid_generate_v4 (),
         name character varying(255) NOT NULL,
@@ -56,7 +74,7 @@ CREATE TABLE
         CONSTRAINT base_classes_pkey PRIMARY KEY (id)
     );
 
-CREATE TABLE
+CREATE TABLE IF NOT EXISTS
     eht.second_classes (
         id UUID NOT NULL DEFAULT uuid_generate_v4 (),
         base_class_id UUID NOT NULL,
@@ -67,7 +85,7 @@ CREATE TABLE
         CONSTRAINT fk_base_classes FOREIGN KEY (base_class_id) REFERENCES eht.base_classes (id)
     );
 
-CREATE TABLE
+CREATE TABLE IF NOT EXISTS
     eht.third_classes (
         id UUID NOT NULL DEFAULT uuid_generate_v4 (),
         base_class_id UUID NOT NULL,
@@ -175,7 +193,7 @@ END $$;
 CREATE OR REPLACE FUNCTION eht.create_stats() RETURNS TRIGGER AS $$
 BEGIN
     INSERT INTO eht.stats (hunter_id, hp, attack, defense, crit_chance, crit_damage, attack_speed, evasion)
-    VALUES (NEW.id, 0, 0, 0, 0, 0, 0, 0);
+    VALUES (NEW.hunter_id, 0, 0, 0, 0, 0, 0, 0);
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;

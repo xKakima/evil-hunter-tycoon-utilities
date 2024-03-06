@@ -99,8 +99,8 @@ class _MainAppPageState extends State<MainAppPage> {
               ),
             ),
             ListTile(
-              leading: Icon(Icons.build),
-              title: Text('Gear Builder'),
+              leading: Icon(Icons.group),
+              title: Text('Hunters'),
               onTap: () {
                 setState(() {
                   selectedIndex = 0;

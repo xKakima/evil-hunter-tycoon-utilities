@@ -3,6 +3,59 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+String capitalize(String s) => s[0].toUpperCase() + s.substring(1);
+
+List<String> hunterBaseClass = [
+  "Berserker",
+  "Sorceror",
+  "Paladin",
+  "Archer",
+];
+
+Map<String, List<String>> hunterSecondClass = {
+  "Berserker": ["Duelist", "Warrior", "Slayer"],
+  "Sorceror": ["Archmage", "Darkmage", "Ignis"],
+  "Paladin": ["Crusader", "Templar", "Darkpaladin"],
+  "Archer": ["Hawkeye", "Sniper", "Summonarcher"],
+};
+
+Map<String, List<String>> hunterThirdClass = {
+  "Berserker": ["Barbarian", "Swordsaint", "Destroyer"],
+  "Sorceror": ["Conjuror", "DarkLord", "Illusionist"],
+  "Paladin": ["Guardian", "Inquisitor", "Executor"],
+  "Archer": ["Ministrel", "Scout", "Arcanearcher"],
+};
+
+enum HunterType { dps, tank }
+
+class Hunter {
+  final String name;
+  final String baseClass;
+  final String secondClass;
+  final String thirdClass;
+  HunterType hunterType = HunterType.dps;
+  Map<String, int> stats;
+
+  Hunter({
+    required this.name,
+    required this.baseClass,
+    required this.secondClass,
+    required this.thirdClass,
+    required this.stats,
+  });
+
+  factory Hunter.fromJson(Map<String, dynamic> json) {
+    print("Parsing Hunter from Json: $json");
+    return Hunter(
+      name: json['name'],
+      baseClass: json['baseClass'],
+      secondClass: json['secondClass'],
+      thirdClass: json['thirdClass'],
+      stats: Map<String, int>.from(json['stats']),
+    );
+  }
+}
+
 class HunterState extends ChangeNotifier {
   late Hunter newHunter;
 
@@ -10,23 +63,52 @@ class HunterState extends ChangeNotifier {
   var savedHunters = <Hunter>[];
 
   void createHunter() {
-    newHunter = Hunter(
-        name: "New Hunter",
-        hunterClass: hunterClasses["Berserker"],
-        stats: {
-          "HP": 0,
-          "Attack": 0,
-          "Defense": 0,
-          "CritChance": 0,
-          "AttackSpeed": 0,
-          "Evasion": 0,
-        });
+    var newHunter = Hunter(
+      name: "New Hunter",
+      baseClass: hunterBaseClass[0],
+      secondClass: hunterSecondClass[hunterBaseClass.isNotEmpty
+              ? hunterBaseClass[0]
+              : 'Berserker']?[0] ??
+          'Duelist',
+      thirdClass: hunterThirdClass[hunterBaseClass.isNotEmpty
+              ? hunterBaseClass[0]
+              : 'Berserker']?[0] ??
+          'Swordsaint',
+      stats: {
+        "HP": 0,
+        "Attack": 0,
+        "Defense": 0,
+        "CritChance": 0,
+        "AttackSpeed": 0,
+        "Evasion": 0,
+      },
+    );
+
     savedHunters.add(newHunter);
+    print("SavedHunters: $savedHunters");
     notifyListeners();
     if (kDebugMode) {
       print("Created Hunter");
     }
   }
+  // void createHunter() {
+  //   newHunter = Hunter(
+  //       name: "New Hunter",
+  //       hunterClass: hunterClasses["Berserker"],
+  //       stats: {
+  //         "HP": 0,
+  //         "Attack": 0,
+  //         "Defense": 0,
+  //         "CritChance": 0,
+  //         "AttackSpeed": 0,
+  //         "Evasion": 0,
+  //       });
+  //   savedHunters.add(newHunter);
+  //   notifyListeners();
+  //   if (kDebugMode) {
+  //     print("Created Hunter");
+  //   }
+  // }
 
   void saveHuntersFromDatabase(hunters) {
     print("hunters from db ${hunters}");
@@ -37,11 +119,11 @@ class HunterState extends ChangeNotifier {
     }
   }
 
-  void saveHunter(name) {
-    newHunter.name = name;
-    savedHunters.add(newHunter);
-    createOrSaveHunter(name);
-  }
+  // void saveHunter(name) {
+  //   newHunter.name = name;
+  //   savedHunters.add(newHunter);
+  //   createOrSaveHunter(name);
+  // }
 }
 
 class HunterBuilder extends StatefulWidget {
@@ -115,7 +197,7 @@ class HunterBuilderState extends State<HunterBuilder> {
                     // hunterState.newHunter.hunterClass =
                     //     newValue! as HunterBaseClass?;
                   },
-                  items: hunterClasses.keys
+                  items: hunterBaseClass
                       .map<DropdownMenuItem<String>>((String key) {
                     return DropdownMenuItem<String>(
                       value: key,
@@ -126,7 +208,7 @@ class HunterBuilderState extends State<HunterBuilder> {
                 const Gear(),
                 ElevatedButton(
                     onPressed: () {
-                      hunterState.saveHunter(inputFieldController.text);
+                      // hunterState.saveHunter(inputFieldController.text);
 
                       var hunterName = hunterState.savedHunters[index].name;
                       if (kDebugMode) {
@@ -193,80 +275,11 @@ class _GearState extends State<Gear> {
   }
 }
 
-String capitalize(String s) => s[0].toUpperCase() + s.substring(1);
-
-Map<String, HunterBaseClass> hunterClasses = {
-  "Berserker": HunterBaseClass("Berserker", ["duelist", "warrior", "slayer"],
-      ["barbarian", "swordSaint", "destroyer"]),
-  "Sorceror": HunterBaseClass("Sorceror", ["archMage", "darkMage", "ignis"],
-      ["conjuror", "darkLord", "illusionist"]),
-  "Paladin": HunterBaseClass("Paladin", ["crusader", "templar", "darkPaladin"],
-      ["guardian", "inquisitor", "executor"]),
-  "Archer": HunterBaseClass("Archer", ["duelist", "warrior", "slayer"],
-      ["ministrel", "scout", "arcaneArcher"]),
-};
-
-enum HunterType { dps, tank }
-
-class HunterBaseClass {
-  final String name;
-  final List<String> secondJobs;
-  final List<String> thirdJobs;
-  HunterType hunterType = HunterType.dps;
-
-  Map<String, dynamic> toJson() {
-    return {
-      // Return a map that represents the object.
-      // For example, if your class has a field named 'name', you might do:
-      // 'name': name,
-    };
-  }
-
-  HunterBaseClass(this.name, this.secondJobs, this.thirdJobs);
-}
-
-class Hunter {
-  var name = "New Hunter";
-  var hunterClass = hunterClasses["Berserker"];
-  var stats = {
-    "HP": 0,
-    "Attack": 0,
-    "Defense": 0,
-    "CritChance": 0,
-    "AttackSpeed": 0,
-    "Evasion": 0,
-  };
-
-  Hunter(
-      {required this.name,
-      HunterBaseClass? hunterClass,
-      Map<String, int>? stats});
-
-  Map<String, dynamic> toJson() {
-    return {
-      'name': name,
-    };
-  }
-
-  factory Hunter.fromJson(Map<String, dynamic> json) {
-    print("Hunter from json: $json");
-
-    return Hunter(
-      name: json['name'],
-    );
-  }
-}
-
 class HunterPage extends StatefulWidget {
   const HunterPage({super.key});
 
   @override
   State<HunterPage> createState() => _HunterPageState();
-}
-
-Hunter parseHunterFromJson(Map<String, dynamic> json) {
-  print("Parsing Hunter from Json: $json");
-  return Hunter(name: json['name']);
 }
 
 class _HunterPageState extends State<HunterPage> {
@@ -288,7 +301,7 @@ class _HunterPageState extends State<HunterPage> {
       if (response.isEmpty) {
         Future.microtask(() => hunterState.createHunter());
       } else {
-        response.forEach((hunter) => hunters.add(parseHunterFromJson(hunter)));
+        response.forEach((hunter) => hunters.add(Hunter.fromJson(hunter)));
         hunterState.saveHuntersFromDatabase(hunters);
         print(hunterState.savedHunters);
       }
@@ -299,7 +312,7 @@ class _HunterPageState extends State<HunterPage> {
 
   @override
   Widget build(BuildContext context) {
-    // var hunterState = context.watch<HunterState>();
+    var hunterState = context.watch<HunterState>();
 
     return LayoutBuilder(builder: (context, constraints) {
       return Scaffold(
@@ -326,7 +339,7 @@ class _HunterPageState extends State<HunterPage> {
                   if (kDebugMode) {
                     print("Creating Hunter");
                   }
-                  // hunterState.createHunter();
+                  hunterState.createHunter();
                 },
                 child: const Padding(
                   padding: EdgeInsets.all(10.0),
