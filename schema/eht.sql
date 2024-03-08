@@ -1,7 +1,44 @@
 DROP SCHEMA IF EXISTS eht CASCADE;
+DROP POLICY IF EXISTS "Users can view their own data" ON auth.users;
+CREATE POLICY "Users can view their own data" on auth.users
+FOR SELECT
+USING ( auth.uid() = auth.users.id );
 
 CREATE SCHEMA eht;
 
+
+
+CREATE OR REPLACE FUNCTION create_crud_policy_with_reference(
+    table_name text, 
+    reference_table_name text, 
+    reference_column_name text
+) RETURNS VOID AS $$
+BEGIN
+    EXECUTE format('
+        CREATE POLICY "Users can insert their own data on %1$s" ON %1$s
+        FOR INSERT
+        TO authenticated
+        WITH CHECK ((SELECT user_id FROM %2$s WHERE %3$s = %1$s.%3$s) = auth.uid());
+
+        CREATE POLICY "Users can select their own data on %1$s" ON %1$s
+        FOR SELECT
+        TO authenticated
+        USING ((SELECT user_id FROM %2$s WHERE %3$s = %1$s.%3$s) = auth.uid());
+
+        CREATE POLICY "Users can update their own data on %1$s" ON %1$s
+        FOR UPDATE
+        TO authenticated
+        USING ((SELECT user_id FROM %2$s WHERE %3$s = %3$s) = auth.uid());
+
+        CREATE POLICY "Users can delete their own data on %1$s" ON %1$s
+        FOR DELETE
+        TO authenticated
+        USING ((SELECT user_id FROM %2$s WHERE %3$s = %3$s) = auth.uid());
+    ', table_name, reference_table_name, reference_column_name);
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create Types
 DO $$ 
 BEGIN 
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'hunter_type') THEN 
@@ -23,23 +60,12 @@ BEGIN
   END IF; 
 END $$;
 
-CREATE TABLE IF NOT EXISTS eht.gears (
-    id UUID NOT NULL DEFAULT uuid_generate_v4 (),
-    name varchar(255) NOT NULL,
-    gear_type eht.gear_type NOT NULL DEFAULT 'Weapon',
-    variant eht.gear_variant NOT NULL DEFAULT 'Ancient',
-    created_at timestamp without time zone NOT NULL DEFAULT now (),
-    updated_at timestamp without time zone NOT NULL DEFAULT now (),
-    CONSTRAINT gears_pkey PRIMARY KEY (id)
-
-);
-ALTER TABLE eht.gears ENABLE ROW LEVEL SECURITY;
-
+-- Create Tables
 CREATE TABLE IF NOT EXISTS
     eht.hunters (
         user_id UUID NOT NULL,
         hunter_id UUID NOT NULL DEFAULT uuid_generate_v4 (),
-        name character varying(255) NOT NULL,
+        name character varying(255) NOT NULL UNIQUE,
         hunter_type eht.hunter_type DEFAULT 'DPS',
         created_at timestamp without time zone NOT NULL DEFAULT now (),
         updated_at timestamp without time zone NOT NULL DEFAULT now (),
@@ -47,6 +73,22 @@ CREATE TABLE IF NOT EXISTS
         CONSTRAINT fk_users FOREIGN KEY (user_id) REFERENCES auth.users (id)
     );
 ALTER TABLE eht.hunters ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can insert their own data on eht.hunters" ON eht.hunters
+    FOR INSERT
+WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can select their own data on eht.hunters" ON eht.hunters
+    FOR SELECT
+USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own data on eht.hunters" ON eht.hunters
+    FOR UPDATE
+USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own data on eht.hunters" ON eht.hunters
+    FOR DELETE
+USING (auth.uid() = user_id);
 
 CREATE TABLE IF NOT EXISTS
     eht.stats (
@@ -61,9 +103,25 @@ CREATE TABLE IF NOT EXISTS
         created_at timestamp without time zone NOT NULL DEFAULT now (),
         updated_at timestamp without time zone NOT NULL DEFAULT now (),
         CONSTRAINT stats_pkey PRIMARY KEY (hunter_id),
-        CONSTRAINT fk_hunters FOREIGN KEY (hunter_id) REFERENCES eht.hunters (hunter_id)
+        CONSTRAINT fk_hunters FOREIGN KEY (hunter_id) REFERENCES eht.hunters (hunter_id) ON DELETE CASCADE
     );
 ALTER TABLE eht.stats ENABLE ROW LEVEL SECURITY;
+SELECT create_crud_policy_with_reference('eht.stats', 'eht.hunters', 'hunter_id');
+
+CREATE TABLE IF NOT EXISTS eht.gears (
+    id UUID NOT NULL DEFAULT uuid_generate_v4 (),
+    hunter_id UUID NOT NULL,
+    name varchar(255) NOT NULL,
+    gear_type eht.gear_type NOT NULL DEFAULT 'Weapon',
+    variant eht.gear_variant NOT NULL DEFAULT 'Ancient',
+    created_at timestamp without time zone NOT NULL DEFAULT now (),
+    updated_at timestamp without time zone NOT NULL DEFAULT now (),
+    CONSTRAINT gears_pkey PRIMARY KEY (id),
+    CONSTRAINT fk_hunters FOREIGN KEY (hunter_id) REFERENCES eht.hunters (hunter_id) ON DELETE SET NULL
+);
+ALTER TABLE eht.gears ENABLE ROW LEVEL SECURITY;
+SELECT create_crud_policy_with_reference('eht.gears', 'eht.hunters', 'hunter_id');
+
 
 CREATE TABLE IF NOT EXISTS
     eht.base_classes (
@@ -98,8 +156,8 @@ CREATE TABLE IF NOT EXISTS
     
 
 -- Insert Initial Data
-
 -- Insert 'Berserker' base class and its second and third classes
+
 DO $$
 DECLARE 
     base_class_id UUID;
@@ -187,8 +245,7 @@ BEGIN
         (base_class_id, 'Arcanearcher');
 END $$;
 
--- Functions
-
+-- Triggers
 -- Create a function that inserts a row into the stats table
 CREATE OR REPLACE FUNCTION eht.create_stats() RETURNS TRIGGER AS $$
 BEGIN
@@ -203,10 +260,6 @@ CREATE TRIGGER create_stats_after_insert
 AFTER INSERT ON eht.hunters
 FOR EACH ROW
 EXECUTE FUNCTION eht.create_stats();
-
-create policy "Users can view their own data" on auth.users
-for select
-using ( auth.uid() = auth.users.id );
 
 GRANT USAGE ON SCHEMA eht TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA eht TO authenticated;

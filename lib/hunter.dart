@@ -91,24 +91,6 @@ class HunterState extends ChangeNotifier {
       print("Created Hunter");
     }
   }
-  // void createHunter() {
-  //   newHunter = Hunter(
-  //       name: "New Hunter",
-  //       hunterClass: hunterClasses["Berserker"],
-  //       stats: {
-  //         "HP": 0,
-  //         "Attack": 0,
-  //         "Defense": 0,
-  //         "CritChance": 0,
-  //         "AttackSpeed": 0,
-  //         "Evasion": 0,
-  //       });
-  //   savedHunters.add(newHunter);
-  //   notifyListeners();
-  //   if (kDebugMode) {
-  //     print("Created Hunter");
-  //   }
-  // }
 
   void saveHuntersFromDatabase(hunters) {
     print("hunters from db ${hunters}");
@@ -119,11 +101,11 @@ class HunterState extends ChangeNotifier {
     }
   }
 
-  // void saveHunter(name) {
-  //   newHunter.name = name;
-  //   savedHunters.add(newHunter);
-  //   createOrSaveHunter(name);
-  // }
+  void saveHunter(hunter, context) {
+    // savedHunters.add(hunter);
+    upsertHunter(hunter, context);
+    notifyListeners();
+  }
 }
 
 class HunterBuilder extends StatefulWidget {
@@ -159,6 +141,7 @@ class HunterBuilderState extends State<HunterBuilder> {
         ),
         itemCount: hunterState.savedHunters.length,
         itemBuilder: (context, index) {
+          var widgetHunter;
           final inputFieldController =
               TextEditingController(text: hunterState.savedHunters[index].name);
           return Container(
@@ -193,9 +176,6 @@ class HunterBuilderState extends State<HunterBuilder> {
                         print("new Value $classDropDownValue");
                       }
                     });
-                    // print("new Value $newValue");
-                    // hunterState.newHunter.hunterClass =
-                    //     newValue! as HunterBaseClass?;
                   },
                   items: hunterBaseClass
                       .map<DropdownMenuItem<String>>((String key) {
@@ -208,13 +188,24 @@ class HunterBuilderState extends State<HunterBuilder> {
                 const Gear(),
                 ElevatedButton(
                     onPressed: () {
-                      // hunterState.saveHunter(inputFieldController.text);
-
-                      var hunterName = hunterState.savedHunters[index].name;
+                      widgetHunter = new Hunter(
+                          name: inputFieldController.text,
+                          baseClass: classDropDownValue,
+                          secondClass:
+                              hunterSecondClass[classDropDownValue]![0],
+                          thirdClass: hunterThirdClass[classDropDownValue]![0],
+                          stats: {
+                            "HP": 0,
+                            "Attack": 0,
+                            "Defense": 0,
+                            "CritChance": 0,
+                            "AttackSpeed": 0,
+                            "Evasion": 0,
+                          });
+                      hunterState.saveHunter(widgetHunter, context);
                       if (kDebugMode) {
                         print('Save Hunter');
                         print("Current Index: $index");
-                        print("Hunter Name: $hunterName");
                       }
                     },
                     child: const Text('Save Hunter '))

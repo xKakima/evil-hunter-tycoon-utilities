@@ -1,5 +1,6 @@
 import 'package:evil_hunter_tycoon_utilities/database/stats_table.dart';
 import 'package:evil_hunter_tycoon_utilities/hunter.dart';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 final supabase = Supabase.instance.client;
@@ -22,16 +23,37 @@ Future<PostgrestList> fetchHunters() async {
   return hunters;
 }
 
-Future<void> upsertHunter(Hunter hunter) async {
+Future<void> upsertHunter(Hunter hunter, context) async {
+  print("Supabase current user: ${supabase.auth}");
   var userId = supabase.auth.currentUser?.id;
-  final response = await supabase.from('hunters').upsert([
-    {'user_id': '$userId', 'name': hunter.name}
-  ]);
-
-  for (var hunter in response.data) {
-    final statResponse = upsertStats(hunter['id'], hunter.stats);
-    print(statResponse);
+  try {
+    final response = await supabase.from('hunters').upsert(
+      {'user_id': '$userId', 'name': hunter.name},
+      ignoreDuplicates: false,
+    ).select("hunter_id");
+    print("responseasdas: $response");
+  } catch (e) {
+    var errorMessage;
+    if (e.toString().contains("unique constraint"))
+      errorMessage = "Hunter name already exists";
+    else
+      errorMessage = e.toString();
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Error"),
+          content: Text(errorMessage),
+        );
+      },
+    );
   }
 
-  print(response);
+  // for (var hunter in response['data']) {
+  //   print("Hunter ID: ${hunter['id']}");
+  //   final statResponse = upsertStats(hunter['id'], hunter.stats);
+  //   print(statResponse);
+  // }
+
+  // print(response);
 }
