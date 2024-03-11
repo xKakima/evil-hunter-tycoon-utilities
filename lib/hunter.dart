@@ -109,26 +109,16 @@ class HunterState extends ChangeNotifier {
 }
 
 class HunterBuilder extends StatefulWidget {
-  const HunterBuilder({super.key});
+  HunterBuilder({Key? key}) : super(key: key);
 
   @override
   State<HunterBuilder> createState() => HunterBuilderState();
 }
 
 class HunterBuilderState extends State<HunterBuilder> {
-  // Global Widget Variables
-  final inputFieldController = TextEditingController(text: "New Hunter");
-
-  @override
-  void dispose() {
-    inputFieldController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     var hunterState = context.watch<HunterState>();
-    var classDropDownValue = "Berserker";
 
     return Padding(
       padding: const EdgeInsets.all(20.0),
@@ -141,6 +131,9 @@ class HunterBuilderState extends State<HunterBuilder> {
         ),
         itemCount: hunterState.savedHunters.length,
         itemBuilder: (context, index) {
+          String baseClassDropDownValue = "Berserker";
+          String secondClassDropDownValue = "Duelist";
+          String thirdClassDropDownValue = "Barbarian";
           var widgetHunter;
           final inputFieldController =
               TextEditingController(text: hunterState.savedHunters[index].name);
@@ -165,19 +158,53 @@ class HunterBuilderState extends State<HunterBuilder> {
                 Expanded(
                     child: DropdownButtonFormField(
                   isExpanded: true,
-                  value: classDropDownValue,
+                  value: baseClassDropDownValue,
                   onChanged: (newValue) {
                     setState(() {
-                      if (kDebugMode) {
-                        print("previous Value $classDropDownValue");
-                      }
-                      classDropDownValue = newValue.toString();
-                      if (kDebugMode) {
-                        print("new Value $classDropDownValue");
-                      }
+                      baseClassDropDownValue = newValue.toString();
+                      // Set the second dropdown value based on the first dropdown
+                      secondClassDropDownValue =
+                          hunterSecondClass[baseClassDropDownValue]![0];
+                      // Set the third dropdown value based on the first dropdown
+                      thirdClassDropDownValue =
+                          hunterThirdClass[baseClassDropDownValue]![0];
                     });
                   },
                   items: hunterBaseClass
+                      .map<DropdownMenuItem<String>>((String key) {
+                    return DropdownMenuItem<String>(
+                      value: key,
+                      child: Center(child: Text(key)),
+                    );
+                  }).toList(),
+                )),
+                Expanded(
+                    child: DropdownButtonFormField(
+                  isExpanded: true,
+                  value: secondClassDropDownValue,
+                  onChanged: (newValue) {
+                    setState(() {
+                      secondClassDropDownValue = newValue.toString();
+                    });
+                  },
+                  items: hunterSecondClass[baseClassDropDownValue]!
+                      .map<DropdownMenuItem<String>>((String key) {
+                    return DropdownMenuItem<String>(
+                      value: key,
+                      child: Center(child: Text(key)),
+                    );
+                  }).toList(),
+                )),
+                Expanded(
+                    child: DropdownButtonFormField(
+                  isExpanded: true,
+                  value: thirdClassDropDownValue,
+                  onChanged: (newValue) {
+                    setState(() {
+                      thirdClassDropDownValue = newValue.toString();
+                    });
+                  },
+                  items: hunterThirdClass[baseClassDropDownValue]!
                       .map<DropdownMenuItem<String>>((String key) {
                     return DropdownMenuItem<String>(
                       value: key,
@@ -190,10 +217,9 @@ class HunterBuilderState extends State<HunterBuilder> {
                     onPressed: () {
                       widgetHunter = new Hunter(
                           name: inputFieldController.text,
-                          baseClass: classDropDownValue,
-                          secondClass:
-                              hunterSecondClass[classDropDownValue]![0],
-                          thirdClass: hunterThirdClass[classDropDownValue]![0],
+                          baseClass: baseClassDropDownValue,
+                          secondClass: secondClassDropDownValue,
+                          thirdClass: thirdClassDropDownValue,
                           stats: {
                             "HP": 0,
                             "Attack": 0,
@@ -312,7 +338,7 @@ class _HunterPageState extends State<HunterPage> {
             Expanded(
               child: Container(
                 color: Theme.of(context).colorScheme.primaryContainer,
-                child: const HunterBuilder(),
+                child: HunterBuilder(),
               ),
             ),
           ],

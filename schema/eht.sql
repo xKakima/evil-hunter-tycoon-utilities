@@ -67,10 +67,14 @@ CREATE TABLE IF NOT EXISTS
         hunter_id UUID NOT NULL DEFAULT uuid_generate_v4 (),
         name character varying(255) NOT NULL UNIQUE,
         hunter_type eht.hunter_type DEFAULT 'DPS',
+        base_class UUID REFERENCES eht.base_classes(id) NOT NULL,
+        second_class UUID REFERENCES eht.second_classes(id),
+        third_class UUID REFERENCES eht.third_class(id),
         created_at timestamp without time zone NOT NULL DEFAULT now (),
         updated_at timestamp without time zone NOT NULL DEFAULT now (),
         CONSTRAINT hunters_pkey PRIMARY KEY (hunter_id),
-        CONSTRAINT fk_users FOREIGN KEY (user_id) REFERENCES auth.users (id)
+        CONSTRAINT fk_users FOREIGN KEY (user_id) REFERENCES auth.users (id),
+
     );
 ALTER TABLE eht.hunters ENABLE ROW LEVEL SECURITY;
 
