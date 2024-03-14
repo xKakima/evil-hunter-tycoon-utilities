@@ -121,6 +121,8 @@ class HunterItemState with ChangeNotifier {
   String secondClassDropDownValue = "Duelist";
   String thirdClassDropDownValue = "Barbarian";
 
+  var name = "";
+
   void updateBaseClass(String newValue) {
     baseClassDropDownValue = newValue;
     secondClassDropDownValue = hunterSecondClass[baseClassDropDownValue]![0];
@@ -159,7 +161,7 @@ class HunterBuilderState extends State<HunterBuilder> {
             child: Consumer<HunterItemState>(
               builder: (context, hunterItemState, child) {
                 final inputFieldController = TextEditingController(
-                    text: hunterState.savedHunters[index].name);
+                    text: hunterItemState.name);
                 return Container(
                   decoration: BoxDecoration(
                     border: Border.all(color: Colors.black),
