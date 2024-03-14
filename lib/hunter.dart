@@ -230,7 +230,7 @@ class HunterBuilderState extends State<HunterBuilder> {
                           );
                         }).toList(),
                       )),
-                      const Gear(),
+                      // const Gear(),
                       ElevatedButton(
                           onPressed: () {
                             var currentWidgetHunter = new Hunter(

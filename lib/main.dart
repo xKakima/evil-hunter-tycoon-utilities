@@ -59,6 +59,15 @@ class HunterClassParsers {
     }
     return result;
   }
+
+  //TODO: Implement the parser for second and third classes
+  Map<String, List<String> > secondClassParser(List<Map<String, dynamic>> list) {
+    var result = <String, List<String>>{};
+    for (var item in list) {
+      result[item['name']] = item['id'];
+    }
+    return result;
+  }
 }
 
 class EHTApp extends StatefulWidget {

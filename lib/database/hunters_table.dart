@@ -29,11 +29,13 @@ Future<PostgrestList> fetchHunters(BuildContext context) async {
 }
 
 Future<void> upsertHunter(Hunter hunter, context) async {
+  var ehtState = Provider.of<EHTState>(context, listen: false);
   print("Supabase current user: ${supabase.auth}");
   var userId = supabase.auth.currentUser?.id;
   try {
+    //TODO add Classes
     final response = await supabase.from('hunters').upsert(
-      {'user_id': '$userId', 'name': hunter.name},
+      {'user_id': '$userId', 'name': hunter.name, 'base_class': hunter.baseClass, 'second_class': hunter.secondClass, 'third_class': hunter.thirdClass, 'stats': hunter.stats},
       ignoreDuplicates: false,
     ).select("hunter_id");
     print("responseasdas: $response");
