@@ -1,6 +1,6 @@
 # evil_hunter_tycoon_utilities
 
-An Evil Hunters Tycoon utilities app made by Kakima
+An Evil Hunter Tycoon utilities app made by Kakima
 
 ## Getting Started
 
