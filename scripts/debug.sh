@@ -1,0 +1,1 @@
+flutter run --observatory-port=58000
