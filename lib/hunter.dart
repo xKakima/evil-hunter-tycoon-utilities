@@ -167,6 +167,7 @@ class HunterBuilderState extends State<HunterBuilder> {
                     border: Border.all(color: Colors.black),
                     //Make border curved
                     borderRadius: BorderRadius.circular(12),
+                    color: Colors.white,
                   ),
                   padding: const EdgeInsets.all(10),
                   child: Column(
@@ -180,6 +181,7 @@ class HunterBuilderState extends State<HunterBuilder> {
                               TextStyle(fontSize: 20, color: Colors.black),
                           border: OutlineInputBorder(),
                         ),
+                        onChanged: (value) => hunterItemState.name = value,
                       ),
                       Expanded(
                           child: DropdownButtonFormField(
@@ -334,7 +336,7 @@ class _HunterPageState extends State<HunterPage> {
     if (!_fetchedHunters) {
       var hunterState = context.read<HunterState>();
 
-      var response = await fetchHunters();
+      var response = await fetchHunters(context);
       print(response);
       print("is hunters empty: ${response.isEmpty}");
 
@@ -360,7 +362,7 @@ class _HunterPageState extends State<HunterPage> {
           children: [
             Expanded(
               child: Container(
-                color: Theme.of(context).colorScheme.primaryContainer,
+                color: Color.fromRGBO(27, 27, 30, 1.0),
                 child: HunterBuilder(),
               ),
             ),
@@ -374,7 +376,9 @@ class _HunterPageState extends State<HunterPage> {
             return Container(
               width: clampedSize,
               height: clampedSize,
+              // color: Colors.white,
               child: FloatingActionButton(
+                backgroundColor: Color.fromARGB(255, 196, 196, 196),
                 onPressed: () {
                   if (kDebugMode) {
                     print("Creating Hunter");

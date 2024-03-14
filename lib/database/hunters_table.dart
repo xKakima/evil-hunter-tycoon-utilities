@@ -1,13 +1,18 @@
 import 'package:evil_hunter_tycoon_utilities/database/stats_table.dart';
 import 'package:evil_hunter_tycoon_utilities/hunter.dart';
+import 'package:evil_hunter_tycoon_utilities/main.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 final supabase = Supabase.instance.client;
 
-Future<PostgrestList> fetchHunters() async {
+Future<PostgrestList> fetchHunters(BuildContext context) async {
+  var ehtState = Provider.of<EHTState>(context, listen: false);
+  print("Base classes: ${ehtState.baseClasses}");
   print("Supabase current user: ${supabase.auth.currentUser}");
   print("Getting Hunter using id: ${supabase.auth.currentUser?.id}");
+
   final hunters = await supabase
       .from('hunters')
       .select('*')

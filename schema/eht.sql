@@ -62,6 +62,38 @@ END $$;
 
 -- Create Tables
 CREATE TABLE IF NOT EXISTS
+    eht.base_classes (
+        id UUID NOT NULL DEFAULT uuid_generate_v4 (),
+        name character varying(255) NOT NULL,
+        created_at timestamp without time zone NOT NULL DEFAULT now (),
+        updated_at timestamp without time zone NOT NULL DEFAULT now (),
+        CONSTRAINT base_classes_pkey PRIMARY KEY (id)
+    );
+
+CREATE TABLE IF NOT EXISTS
+    eht.second_classes (
+        id UUID NOT NULL DEFAULT uuid_generate_v4 (),
+        base_class_id UUID NOT NULL,
+        name character varying(255) NOT NULL,
+        created_at timestamp without time zone NOT NULL DEFAULT now (),
+        updated_at timestamp without time zone NOT NULL DEFAULT now (),
+        CONSTRAINT second_classes_pkey PRIMARY KEY (id),
+        CONSTRAINT fk_base_classes FOREIGN KEY (base_class_id) REFERENCES eht.base_classes (id)
+    );
+
+CREATE TABLE IF NOT EXISTS
+    eht.third_classes (
+        id UUID NOT NULL DEFAULT uuid_generate_v4 (),
+        base_class_id UUID NOT NULL,
+        name character varying(255) NOT NULL,
+        created_at timestamp without time zone NOT NULL DEFAULT now (),
+        updated_at timestamp without time zone NOT NULL DEFAULT now (),
+        CONSTRAINT third_classes_pkey PRIMARY KEY (id),
+        CONSTRAINT fk_base_classes FOREIGN KEY (base_class_id) REFERENCES eht.base_classes (id)
+    );
+    
+
+CREATE TABLE IF NOT EXISTS
     eht.hunters (
         user_id UUID NOT NULL,
         hunter_id UUID NOT NULL DEFAULT uuid_generate_v4 (),
@@ -69,12 +101,11 @@ CREATE TABLE IF NOT EXISTS
         hunter_type eht.hunter_type DEFAULT 'DPS',
         base_class UUID REFERENCES eht.base_classes(id) NOT NULL,
         second_class UUID REFERENCES eht.second_classes(id),
-        third_class UUID REFERENCES eht.third_class(id),
+        third_class UUID REFERENCES eht.third_classes(id),
         created_at timestamp without time zone NOT NULL DEFAULT now (),
         updated_at timestamp without time zone NOT NULL DEFAULT now (),
         CONSTRAINT hunters_pkey PRIMARY KEY (hunter_id),
-        CONSTRAINT fk_users FOREIGN KEY (user_id) REFERENCES auth.users (id),
-
+        CONSTRAINT fk_users FOREIGN KEY (user_id) REFERENCES auth.users (id)
     );
 ALTER TABLE eht.hunters ENABLE ROW LEVEL SECURITY;
 
@@ -125,39 +156,6 @@ CREATE TABLE IF NOT EXISTS eht.gears (
 );
 ALTER TABLE eht.gears ENABLE ROW LEVEL SECURITY;
 SELECT create_crud_policy_with_reference('eht.gears', 'eht.hunters', 'hunter_id');
-
-
-CREATE TABLE IF NOT EXISTS
-    eht.base_classes (
-        id UUID NOT NULL DEFAULT uuid_generate_v4 (),
-        name character varying(255) NOT NULL,
-        created_at timestamp without time zone NOT NULL DEFAULT now (),
-        updated_at timestamp without time zone NOT NULL DEFAULT now (),
-        CONSTRAINT base_classes_pkey PRIMARY KEY (id)
-    );
-
-CREATE TABLE IF NOT EXISTS
-    eht.second_classes (
-        id UUID NOT NULL DEFAULT uuid_generate_v4 (),
-        base_class_id UUID NOT NULL,
-        name character varying(255) NOT NULL,
-        created_at timestamp without time zone NOT NULL DEFAULT now (),
-        updated_at timestamp without time zone NOT NULL DEFAULT now (),
-        CONSTRAINT second_classes_pkey PRIMARY KEY (id),
-        CONSTRAINT fk_base_classes FOREIGN KEY (base_class_id) REFERENCES eht.base_classes (id)
-    );
-
-CREATE TABLE IF NOT EXISTS
-    eht.third_classes (
-        id UUID NOT NULL DEFAULT uuid_generate_v4 (),
-        base_class_id UUID NOT NULL,
-        name character varying(255) NOT NULL,
-        created_at timestamp without time zone NOT NULL DEFAULT now (),
-        updated_at timestamp without time zone NOT NULL DEFAULT now (),
-        CONSTRAINT third_classes_pkey PRIMARY KEY (id),
-        CONSTRAINT fk_base_classes FOREIGN KEY (base_class_id) REFERENCES eht.base_classes (id)
-    );
-    
 
 -- Insert Initial Data
 -- Insert 'Berserker' base class and its second and third classes
