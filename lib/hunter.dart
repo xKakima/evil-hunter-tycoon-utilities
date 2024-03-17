@@ -1,4 +1,5 @@
 import 'package:evil_hunter_tycoon_utilities/database/hunters_table.dart';
+import 'package:evil_hunter_tycoon_utilities/main.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -34,84 +35,95 @@ class Hunter {
   final String secondClass;
   final String thirdClass;
   HunterType hunterType = HunterType.dps;
-  Map<String, int> stats;
+  // late Map<String, int> stats;
 
   Hunter({
     required this.name,
     required this.baseClass,
     required this.secondClass,
     required this.thirdClass,
-    required this.stats,
+    // required this.stats,
   });
 
-  factory Hunter.fromJson(Map<String, dynamic> json) {
+  factory Hunter.fromJson(Map<String, dynamic> json, EHTState ehtState) {
     print("Parsing Hunter from Json: $json");
+
+    var baseClassKey = ehtState.baseClasses?.keys.firstWhere(
+        (k) => ehtState.baseClasses?[k] == json['base_class'],
+        orElse: () => '');
+    var secondClassKey = ehtState.secondClasses?.keys.firstWhere(
+        (k) => ehtState.secondClasses?[k] == json['second_class'],
+        orElse: () => '');
+    var thirdClassKey = ehtState.thirdClasses?.keys.firstWhere(
+        (k) => ehtState.thirdClasses?[k] == json['third_class'],
+        orElse: () => '');
+    print("Base Class Key: $baseClassKey");
+    print("Second Class Key: $secondClassKey");
+    print("Third Class Key: $thirdClassKey");
     return Hunter(
       name: json['name'],
-      baseClass: json['baseClass'],
-      secondClass: json['secondClass'],
-      thirdClass: json['thirdClass'],
-      stats: Map<String, int>.from(json['stats']),
+      baseClass: baseClassKey!,
+      secondClass: secondClassKey!,
+      thirdClass: thirdClassKey!,
+      // stats: Map<String, int>.from(json['stats']),
     );
+  }
+  @override
+  String toString() {
+    return 'Hunter: {name: $name, baseClass: $baseClass, secondClass: $secondClass, thirdClass: $thirdClass';
   }
 }
 
 class HunterState extends ChangeNotifier {
   late Hunter newHunter;
-
-  int hunterWidgetCount = 0;
-
-  var savedHunters = <Hunter>[];
-
-  void addHunterWidget() {
-    print("Adding Hunter Widget ${hunterWidgetCount}");
-    hunterWidgetCount++;
-    print("New value of hunterWidgetCount: ${hunterWidgetCount}");
-    notifyListeners();
-  }
+  var hunters = <Hunter>[];
 
   void createHunter() {
     var newHunter = Hunter(
-      name: "New Hunter",
-      baseClass: hunterBaseClass[0],
-      secondClass: hunterSecondClass[hunterBaseClass.isNotEmpty
-              ? hunterBaseClass[0]
-              : 'Berserker']?[0] ??
-          'Duelist',
-      thirdClass: hunterThirdClass[hunterBaseClass.isNotEmpty
-              ? hunterBaseClass[0]
-              : 'Berserker']?[0] ??
-          'Swordsaint',
-      stats: {
-        "HP": 0,
-        "Attack": 0,
-        "Defense": 0,
-        "CritChance": 0,
-        "AttackSpeed": 0,
-        "Evasion": 0,
-      },
+      name: "",
+      baseClass: hunterBaseClass.isNotEmpty ? hunterBaseClass[0] : 'Beserker',
+      secondClass: hunterBaseClass.isNotEmpty &&
+              hunterSecondClass.containsKey(hunterBaseClass[0]) &&
+              hunterSecondClass[hunterBaseClass[0]]!.isNotEmpty
+          ? hunterSecondClass[hunterBaseClass[0]]![0]
+          : 'Duelist',
+      thirdClass: hunterBaseClass.isNotEmpty &&
+              hunterThirdClass.containsKey(hunterBaseClass[0]) &&
+              hunterThirdClass[hunterBaseClass[0]]!.isNotEmpty
+          ? hunterThirdClass[hunterBaseClass[0]]![0]
+          : 'Swordsaint',
+      // stats: {
+      //   "HP": 0,
+      //   "Attack": 0,
+      //   "Defense": 0,
+      //   "CritChance": 0,
+      //   "AttackSpeed": 0,
+      //   "Evasion": 0,
+      // },
     );
 
-    savedHunters.add(newHunter);
-    print("SavedHunters: $savedHunters");
+    hunters.add(newHunter);
+    print("hunters: $hunters");
     notifyListeners();
+    print("Length of hunters: ${hunters.length}");
     if (kDebugMode) {
       print("Created Hunter");
     }
   }
 
-  void saveHuntersFromDatabase(hunters) {
-    print("hunters from db ${hunters}");
-    savedHunters = hunters;
+  void saveHuntersFromDatabase(_hunters) {
+    print("hunters from db ${_hunters}");
+    hunters = _hunters;
+    print("Length of hunters: ${hunters.length}");
     notifyListeners();
     if (kDebugMode) {
       print("Saved Hunter");
     }
   }
 
-  void saveHunter(hunter, context) {
-    // savedHunters.add(hunter);
-    upsertHunter(hunter, context);
+  void saveHunter(_hunter, index, context) {
+    hunters[index] = _hunter;
+    upsertHunter(_hunter, context);
     notifyListeners();
   }
 }
@@ -128,6 +140,25 @@ class HunterItemState with ChangeNotifier {
     secondClassDropDownValue = hunterSecondClass[baseClassDropDownValue]![0];
     thirdClassDropDownValue = hunterThirdClass[baseClassDropDownValue]![0];
     notifyListeners();
+  }
+
+  void updateItemStateValues(index, BuildContext context) {
+    print("Index: $index");
+    var hunterState = context.watch<HunterState>();
+    print("Hunters Length: ${hunterState.hunters.length}");
+    if (index < hunterState.hunters.length) {
+      print("Updating Item State Values");
+      name = hunterState.hunters[index].name;
+      baseClassDropDownValue = hunterState.hunters[index].baseClass;
+      secondClassDropDownValue = hunterState.hunters[index].secondClass;
+      thirdClassDropDownValue = hunterState.hunters[index].thirdClass;
+
+      print("🟢 Name: $name");
+      print("🔵 Base Class: $baseClassDropDownValue");
+      print("🟡 Second Class: $secondClassDropDownValue");
+      print("🔴 Third Class: $thirdClassDropDownValue");
+      notifyListeners();
+    }
   }
 
   // Add other methods to update secondClassDropDownValue and thirdClassDropDownValue...
@@ -154,14 +185,23 @@ class HunterBuilderState extends State<HunterBuilder> {
           crossAxisSpacing: 20, // Horizontal spacing between grid items
           mainAxisSpacing: 20, // Vertical spacing between grid items
         ),
-        itemCount: hunterState.hunterWidgetCount,
+        itemCount: hunterState.hunters.length,
         itemBuilder: (context, index) {
           return ChangeNotifierProvider(
             create: (context) => HunterItemState(),
             child: Consumer<HunterItemState>(
               builder: (context, hunterItemState, child) {
+                print("!!!!Updating Item State Values");
+                hunterItemState.updateItemStateValues(index, context);
+                print("~~~Updated Item State Values");
+                print(
+                    "hunterItemState.secondClassDropDownValue, ${hunterItemState.secondClassDropDownValue}");
+                print(
+                    "hunterItemState.thirdClassDropDownValue, ${hunterItemState.thirdClassDropDownValue}");
                 final inputFieldController = TextEditingController(
-                    text: hunterItemState.name);
+                    text: index < hunterState.hunters.length
+                        ? hunterState.hunters[index].name
+                        : '');
                 return Container(
                   decoration: BoxDecoration(
                     border: Border.all(color: Colors.black),
@@ -203,7 +243,7 @@ class HunterBuilderState extends State<HunterBuilder> {
                         isExpanded: true,
                         value: hunterItemState.secondClassDropDownValue,
                         onChanged: (newValue) {
-                          // hunterItemState.updateSecondClass(newValue.toString());
+                          hunterItemState.secondClassDropDownValue = newValue!;
                         },
                         items: hunterSecondClass[
                                 hunterItemState.baseClassDropDownValue]!
@@ -219,7 +259,7 @@ class HunterBuilderState extends State<HunterBuilder> {
                         isExpanded: true,
                         value: hunterItemState.thirdClassDropDownValue,
                         onChanged: (newValue) {
-                          // hunterItemState.updateThirdClass(newValue.toString());
+                          hunterItemState.thirdClassDropDownValue = newValue!;
                         },
                         items: hunterThirdClass[
                                 hunterItemState.baseClassDropDownValue]!
@@ -234,23 +274,24 @@ class HunterBuilderState extends State<HunterBuilder> {
                       ElevatedButton(
                           onPressed: () {
                             var currentWidgetHunter = new Hunter(
-                                name: inputFieldController.text,
-                                baseClass:
-                                    hunterItemState.baseClassDropDownValue,
-                                secondClass:
-                                    hunterItemState.secondClassDropDownValue,
-                                thirdClass:
-                                    hunterItemState.thirdClassDropDownValue,
-                                stats: {
-                                  "HP": 0,
-                                  "Attack": 0,
-                                  "Defense": 0,
-                                  "CritChance": 0,
-                                  "AttackSpeed": 0,
-                                  "Evasion": 0,
-                                });
+                              name: inputFieldController.text,
+                              baseClass: hunterItemState.baseClassDropDownValue,
+                              secondClass:
+                                  hunterItemState.secondClassDropDownValue,
+                              thirdClass:
+                                  hunterItemState.thirdClassDropDownValue,
+                              // stats: {
+                              //   "HP": 0,
+                              //   "Attack": 0,
+                              //   "Defense": 0,
+                              //   "CritChance": 0,
+                              //   "AttackSpeed": 0,
+                              //   "Evasion": 0,
+                              // }
+                            );
+                            print("Current Hunter: $currentWidgetHunter");
                             hunterState.saveHunter(
-                                currentWidgetHunter, context);
+                                currentWidgetHunter, index, context);
                             if (kDebugMode) {
                               print('Save Hunter');
                               print("Current Index: $index");
@@ -343,9 +384,10 @@ class _HunterPageState extends State<HunterPage> {
       if (response.isEmpty) {
         Future.microtask(() => hunterState.createHunter());
       } else {
-        response.forEach((hunter) => hunters.add(Hunter.fromJson(hunter)));
+        response.forEach((hunter) =>
+            hunters.add(Hunter.fromJson(hunter, context.read<EHTState>())));
         hunterState.saveHuntersFromDatabase(hunters);
-        print(hunterState.savedHunters);
+        print(hunterState.hunters);
       }
 
       _fetchedHunters = true;
@@ -383,7 +425,7 @@ class _HunterPageState extends State<HunterPage> {
                   if (kDebugMode) {
                     print("Creating Hunter");
                   }
-                  hunterState.addHunterWidget();
+                  hunterState.createHunter();
                 },
                 child: const Padding(
                   padding: EdgeInsets.all(10.0),

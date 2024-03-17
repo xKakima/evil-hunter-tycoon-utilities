@@ -177,7 +177,7 @@ BEGIN
     INSERT INTO eht.third_classes (base_class_id, name)
     VALUES 
          (base_class_id, 'Barbarian'),
-        (base_class_id, 'SwordSaint'),
+        (base_class_id, 'Swordsaint'),
         (base_class_id, 'Destroyer');
 END $$;
 
@@ -192,14 +192,14 @@ BEGIN
 
     INSERT INTO eht.second_classes (base_class_id, name)
     VALUES 
-        (base_class_id, 'ArchMage'),
-        (base_class_id, 'DarkMage'),
+        (base_class_id, 'Archmage'),
+        (base_class_id, 'Darkmage'),
         (base_class_id, 'Ignis');
 
     INSERT INTO eht.third_classes (base_class_id, name)
     VALUES 
         (base_class_id, 'Conjuror'),
-        (base_class_id, 'DarkLord'),
+        (base_class_id, 'Darklord'),
         (base_class_id, 'Illusionist');
 END $$;
 
@@ -216,7 +216,7 @@ BEGIN
     VALUES 
         (base_class_id, 'Crusader'),
         (base_class_id, 'Templar'),
-        (base_class_id, 'DarkPaladin');
+        (base_class_id, 'Darkpaladin');
 
     INSERT INTO eht.third_classes (base_class_id, name)
     VALUES 
@@ -236,7 +236,7 @@ BEGIN
 
     INSERT INTO eht.second_classes (base_class_id, name)
     VALUES 
-        (base_class_id, 'HawkEye'),
+        (base_class_id, 'Hawkeye'),
         (base_class_id, 'Sniper'),
         (base_class_id, 'Summonarcher');
 
@@ -249,19 +249,19 @@ END $$;
 
 -- Triggers
 -- Create a function that inserts a row into the stats table
-CREATE OR REPLACE FUNCTION eht.create_stats() RETURNS TRIGGER AS $$
-BEGIN
-    INSERT INTO eht.stats (hunter_id, hp, attack, defense, crit_chance, crit_damage, attack_speed, evasion)
-    VALUES (NEW.hunter_id, 0, 0, 0, 0, 0, 0, 0);
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+-- CREATE OR REPLACE FUNCTION eht.create_stats() RETURNS TRIGGER AS $$
+-- BEGIN
+--     INSERT INTO eht.stats (hunter_id, hp, attack, defense, crit_chance, crit_damage, attack_speed, evasion)
+--     VALUES (NEW.hunter_id, 0, 0, 0, 0, 0, 0, 0);
+--     RETURN NEW;
+-- END;
+-- $$ LANGUAGE plpgsql;
 
--- Create a trigger that calls the create_stats function after an insert operation on the hunters table
-CREATE TRIGGER create_stats_after_insert
-AFTER INSERT ON eht.hunters
-FOR EACH ROW
-EXECUTE FUNCTION eht.create_stats();
+-- -- Create a trigger that calls the create_stats function after an insert operation on the hunters table
+-- CREATE TRIGGER create_stats_after_insert
+-- AFTER INSERT ON eht.hunters
+-- FOR EACH ROW
+-- EXECUTE FUNCTION eht.create_stats();
 
 GRANT USAGE ON SCHEMA eht TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA eht TO authenticated;
