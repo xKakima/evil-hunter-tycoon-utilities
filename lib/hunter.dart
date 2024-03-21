@@ -44,7 +44,6 @@ class Hunter {
     required this.secondClass,
     required this.thirdClass,
     required this.isFromDB,
-    // required this.stats,
   });
 
   factory Hunter.fromJson(Map<String, dynamic> json, EHTState ehtState) {
@@ -159,8 +158,6 @@ class HunterItemState with ChangeNotifier {
       notifyListeners();
     }
   }
-
-  // Add other methods to update secondClassDropDownValue and thirdClassDropDownValue...
 }
 
 class HunterBuilder extends StatefulWidget {

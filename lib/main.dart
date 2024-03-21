@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:evil_hunter_tycoon_utilities/builder/builder%20copy.dart';
+import 'package:evil_hunter_tycoon_utilities/gear/gear.dart';
 import 'package:evil_hunter_tycoon_utilities/database/classes.dart';
 import 'package:evil_hunter_tycoon_utilities/builder/builder.dart';
 import 'package:evil_hunter_tycoon_utilities/login.dart';
