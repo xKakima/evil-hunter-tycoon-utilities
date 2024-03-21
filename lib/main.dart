@@ -1,6 +1,9 @@
 import 'dart:async';
+import 'package:evil_hunter_tycoon_utilities/builder/builder%20copy.dart';
 import 'package:evil_hunter_tycoon_utilities/database/classes.dart';
+import 'package:evil_hunter_tycoon_utilities/builder/builder.dart';
 import 'package:evil_hunter_tycoon_utilities/login.dart';
+import 'package:evil_hunter_tycoon_utilities/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -13,7 +16,7 @@ Future<void> main() async {
       url: 'https://qxqgtvqjalxlkdmsuwxr.supabase.co',
       anonKey:
           'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4cWd0dnFqYWx4bGtkbXN1d3hyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDg3NjM5MTQsImV4cCI6MjAyNDMzOTkxNH0.WjpW_9D9md2w6EYta6QvzyU_B9Xh-aln2_e_0imXuEc',
-      postgrestOptions: PostgrestClientOptions(schema: 'eht'));
+      postgrestOptions: const PostgrestClientOptions(schema: 'eht'));
 
   var baseClassesData = await fetchBaseClasses();
   var secondClassesData = await fetchSecondClasses();
@@ -21,9 +24,9 @@ Future<void> main() async {
 
   var parser = HunterClassParsers();
 
-  var baseClasses = parser.baseClassParser(baseClassesData);
-  var secondClasses = parser.baseClassParser(secondClassesData);
-  var thirdClasses = parser.baseClassParser(thirdClassesData);
+  var baseClasses = parser.classParser(baseClassesData);
+  var secondClasses = parser.classParser(secondClassesData);
+  var thirdClasses = parser.classParser(thirdClassesData);
 
   print("Base classes: $baseClasses");
   print("Second classes: $secondClasses");
@@ -31,8 +34,8 @@ Future<void> main() async {
 
   runApp(
     ChangeNotifierProvider(
-      create: (context) => EHTState()
-        ..setClassData(baseClasses, secondClasses, thirdClasses),
+      create: (context) =>
+          EHTState()..setClassData(baseClasses, secondClasses, thirdClasses),
       child: const EHTApp(),
     ),
   );
@@ -43,30 +46,12 @@ class EHTState extends ChangeNotifier {
   Map<String, String>? secondClasses;
   Map<String, String>? thirdClasses;
 
-  void setClassData (Map<String, String> base, Map<String, String> second, Map<String, String> third) {
+  void setClassData(Map<String, String> base, Map<String, String> second,
+      Map<String, String> third) {
     baseClasses = base;
     secondClasses = second;
     thirdClasses = third;
     notifyListeners();
-  }
-}
-
-class HunterClassParsers {
-  Map<String, String> baseClassParser(List<Map<String, dynamic>> list) {
-    var result = <String, String>{};
-    for (var item in list) {
-      result[item['name']] = item['id'];
-    }
-    return result;
-  }
-
-  //TODO: Implement the parser for second and third classes
-  Map<String, List<String> > secondClassParser(List<Map<String, dynamic>> list) {
-    var result = <String, List<String>>{};
-    for (var item in list) {
-      result[item['name']] = item['id'];
-    }
-    return result;
   }
 }
 
@@ -85,7 +70,7 @@ class _EHTAppState extends State<EHTApp> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => HunterState()),
-        ChangeNotifierProvider(create: (context) => GearState()),
+        // ChangeNotifierProvider(create: (context) => GearState()),
         // Add more providers as needed
       ],
       child: MaterialApp(
@@ -99,12 +84,19 @@ class _EHTAppState extends State<EHTApp> {
             case '/':
               return MaterialPageRoute(
                   builder: (context) => supabase.auth.currentUser != null
-                      ? MainAppPage()
-                      : LoginPage());
+                      ? const MainAppPage()
+                      : const LoginPage());
             case '/main':
-              return MaterialPageRoute(builder: (context) => MainAppPage());
+              return MaterialPageRoute(
+                  builder: (context) => const MainAppPage());
+            case '/gear':
+              return MaterialPageRoute(
+                  builder: (context) => const BuilderPage());
+            case '/builder':
+              return MaterialPageRoute(
+                  builder: (context) => const BuilderPage());
             default:
-              return MaterialPageRoute(builder: (context) => LoginPage());
+              return MaterialPageRoute(builder: (context) => const LoginPage());
           }
         },
       ),
@@ -122,8 +114,13 @@ class MainAppPage extends StatefulWidget {
 class _MainAppPageState extends State<MainAppPage> {
   final supabase = Supabase.instance.client;
   var selectedIndex = 0;
-  final pageTitles = ['Hunters', 'Settings'];
-  var currentUser;
+  final pageTitles = [
+    'Hunters',
+    'Gears',
+    'Hunter and Gear Builder',
+    'Settings'
+  ];
+  User? currentUser;
 
   @override
   void initState() {
@@ -139,7 +136,11 @@ class _MainAppPageState extends State<MainAppPage> {
         page = const HunterPage();
         break;
       case 1:
-        page = Placeholder();
+        page = const GearPage();
+      case 2:
+        page = const BuilderPage();
+      case 3:
+        page = const Placeholder();
         break;
       default:
         throw UnimplementedError('no widget for $selectedIndex');
@@ -148,7 +149,7 @@ class _MainAppPageState extends State<MainAppPage> {
       appBar: AppBar(
         title: Text('EHT Utilities by Kakima - ${pageTitles[selectedIndex]}'),
         foregroundColor: Colors.black,
-        backgroundColor: Color.fromRGBO(101,135,172,1.0),
+        backgroundColor: const Color.fromRGBO(101, 135, 172, 1.0),
       ),
       drawer: Drawer(
         child: ListView(
@@ -156,13 +157,13 @@ class _MainAppPageState extends State<MainAppPage> {
           children: <Widget>[
             DrawerHeader(
               child: Text('Welcome ${currentUser?.userMetadata?['full_name']}'),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: Colors.blue,
               ),
             ),
             ListTile(
-              leading: Icon(Icons.group),
-              title: Text('Hunters'),
+              leading: const Icon(Icons.group),
+              title: const Text('Hunters'),
               onTap: () {
                 setState(() {
                   selectedIndex = 0;
@@ -171,11 +172,31 @@ class _MainAppPageState extends State<MainAppPage> {
               },
             ),
             ListTile(
-              leading: Icon(Icons.settings),
-              title: Text('Settings'),
+              leading: const Icon(Icons.shield),
+              title: const Text('Gears'),
               onTap: () {
                 setState(() {
                   selectedIndex = 1;
+                });
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.handyman),
+              title: const Text('Hunter and Gear Builder'),
+              onTap: () {
+                setState(() {
+                  selectedIndex = 2;
+                });
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('Settings'),
+              onTap: () {
+                setState(() {
+                  selectedIndex = 3;
                 });
                 Navigator.pop(context);
               },

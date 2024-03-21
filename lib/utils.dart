@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-void ShowErrorDialog(BuildContext context, title, errorMessage) {
+void showErrorDialog(BuildContext context, title, errorMessage) {
   showDialog(
     context: context,
     builder: (BuildContext context) {
@@ -10,4 +10,14 @@ void ShowErrorDialog(BuildContext context, title, errorMessage) {
       );
     },
   );
+}
+
+class HunterClassParsers {
+  Map<String, String> classParser(List<Map<String, dynamic>> list) {
+    var result = <String, String>{};
+    for (var item in list) {
+      result[item['name']] = item['id'];
+    }
+    return result;
+  }
 }

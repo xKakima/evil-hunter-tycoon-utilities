@@ -29,7 +29,7 @@ Future<PostgrestList> fetchHunters(BuildContext context) async {
   return hunters;
 }
 
-Future<void> upsertHunter(Hunter hunter, context) async {
+Future<bool> upsertHunter(Hunter hunter, context) async {
   var ehtState = Provider.of<EHTState>(context, listen: false);
   print("Supabase current user: ${supabase.auth}");
   var userId = supabase.auth.currentUser?.id;
@@ -45,19 +45,19 @@ Future<void> upsertHunter(Hunter hunter, context) async {
 
   // Null Checkers
   if (userId == null) {
-    ShowErrorDialog(context, "User not found",
+    showErrorDialog(context, "User not found",
         "There is an error in creating or updating your hunter");
-    return;
+    return false;
   }
   if (hunter.name == "") {
-    ShowErrorDialog(context, "Hunter Name must not be empty",
+    showErrorDialog(context, "Hunter Name must not be empty",
         "Please enter a name for your hunter");
-    return;
+    return false;
   }
   if (baseClassId == null || secondClassId == null || thirdClassId == null) {
-    ShowErrorDialog(context, "Class not found",
+    showErrorDialog(context, "Class not found",
         "There is an error in creating or updating your hunter");
-    return;
+    return false;
   }
 
   try {
@@ -72,6 +72,7 @@ Future<void> upsertHunter(Hunter hunter, context) async {
       ignoreDuplicates: false,
     ).select("hunter_id");
     print("responseasdas: $response");
+    return true;
 
     // List<dynamic> hunters = response['data'];
     // for (var hunter in hunters) {
@@ -87,7 +88,9 @@ Future<void> upsertHunter(Hunter hunter, context) async {
       errorMessage = "Hunter name already exists";
     else
       errorMessage = e.toString();
-    ShowErrorDialog(context,
+    showErrorDialog(context,
         "There is an error in creating or updating your hunter", errorMessage);
   }
+
+  return false;
 }

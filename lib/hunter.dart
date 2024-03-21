@@ -34,6 +34,7 @@ class Hunter {
   final String baseClass;
   final String secondClass;
   final String thirdClass;
+  bool isFromDB;
   HunterType hunterType = HunterType.dps;
   // late Map<String, int> stats;
 
@@ -42,6 +43,7 @@ class Hunter {
     required this.baseClass,
     required this.secondClass,
     required this.thirdClass,
+    required this.isFromDB,
     // required this.stats,
   });
 
@@ -65,6 +67,7 @@ class Hunter {
       baseClass: baseClassKey!,
       secondClass: secondClassKey!,
       thirdClass: thirdClassKey!,
+      isFromDB: true,
       // stats: Map<String, int>.from(json['stats']),
     );
   }
@@ -92,14 +95,7 @@ class HunterState extends ChangeNotifier {
               hunterThirdClass[hunterBaseClass[0]]!.isNotEmpty
           ? hunterThirdClass[hunterBaseClass[0]]![0]
           : 'Swordsaint',
-      // stats: {
-      //   "HP": 0,
-      //   "Attack": 0,
-      //   "Defense": 0,
-      //   "CritChance": 0,
-      //   "AttackSpeed": 0,
-      //   "Evasion": 0,
-      // },
+      isFromDB: false,
     );
 
     hunters.add(newHunter);
@@ -121,9 +117,12 @@ class HunterState extends ChangeNotifier {
     }
   }
 
-  void saveHunter(_hunter, index, context) {
+  Future<void> saveHunter(_hunter, index, context) async {
     hunters[index] = _hunter;
-    upsertHunter(_hunter, context);
+    if (await upsertHunter(_hunter, context)) {
+      hunters[index].isFromDB = true;
+    }
+
     notifyListeners();
   }
 }
@@ -207,7 +206,7 @@ class HunterBuilderState extends State<HunterBuilder> {
                     border: Border.all(color: Colors.black),
                     //Make border curved
                     borderRadius: BorderRadius.circular(12),
-                    color: Colors.white,
+                    color: const Color.fromARGB(146, 255, 255, 255),
                   ),
                   padding: const EdgeInsets.all(10),
                   child: Column(
@@ -273,13 +272,14 @@ class HunterBuilderState extends State<HunterBuilder> {
                       // const Gear(),
                       ElevatedButton(
                           onPressed: () {
-                            var currentWidgetHunter = new Hunter(
+                            var currentWidgetHunter = Hunter(
                               name: inputFieldController.text,
                               baseClass: hunterItemState.baseClassDropDownValue,
                               secondClass:
                                   hunterItemState.secondClassDropDownValue,
                               thirdClass:
                                   hunterItemState.thirdClassDropDownValue,
+                              isFromDB: false,
                               // stats: {
                               //   "HP": 0,
                               //   "Attack": 0,
@@ -305,54 +305,6 @@ class HunterBuilderState extends State<HunterBuilder> {
             ),
           );
         },
-      ),
-    );
-  }
-}
-
-class Gear extends StatefulWidget {
-  const Gear({super.key});
-
-  @override
-  State<Gear> createState() => _GearState();
-}
-
-class _GearState extends State<Gear> {
-  GearType? gearDropDownValue;
-
-  @override
-  Widget build(BuildContext context) {
-    var gearState = context.watch<GearState>();
-
-    gearDropDownValue ??= gearState.gearType;
-    return Expanded(
-      child: Column(
-        children: [
-          Expanded(
-              child: DropdownButtonFormField<GearType>(
-            isExpanded: true,
-            value: gearDropDownValue,
-            onChanged: (newValue) {
-              setState(() {
-                if (kDebugMode) {
-                  print("previous Value $gearDropDownValue");
-                }
-                gearDropDownValue = newValue!;
-                if (kDebugMode) {
-                  print("new Value $gearDropDownValue");
-                }
-              });
-            },
-            items: GearType.values
-                .map<DropdownMenuItem<GearType>>((GearType value) {
-              return DropdownMenuItem<GearType>(
-                value: value,
-                child: Center(
-                    child: Text(capitalize(value.toString().split('.').last))),
-              );
-            }).toList(),
-          )),
-        ],
       ),
     );
   }
@@ -384,8 +336,9 @@ class _HunterPageState extends State<HunterPage> {
       if (response.isEmpty) {
         Future.microtask(() => hunterState.createHunter());
       } else {
-        response.forEach((hunter) =>
-            hunters.add(Hunter.fromJson(hunter, context.read<EHTState>())));
+        for (var hunter in response) {
+          hunters.add(Hunter.fromJson(hunter, context.read<EHTState>()));
+        }
         hunterState.saveHuntersFromDatabase(hunters);
         print(hunterState.hunters);
       }
@@ -404,7 +357,7 @@ class _HunterPageState extends State<HunterPage> {
           children: [
             Expanded(
               child: Container(
-                color: Color.fromRGBO(27, 27, 30, 1.0),
+                color: const Color.fromRGBO(27, 27, 30, 1.0),
                 child: HunterBuilder(),
               ),
             ),
@@ -415,12 +368,12 @@ class _HunterPageState extends State<HunterPage> {
             double buttonSize = constraints.biggest.width * 0.15;
             double clampedSize = buttonSize.clamp(60.0, 100.0);
 
-            return Container(
+            return SizedBox(
               width: clampedSize,
               height: clampedSize,
               // color: Colors.white,
               child: FloatingActionButton(
-                backgroundColor: Color.fromARGB(255, 196, 196, 196),
+                backgroundColor: const Color.fromARGB(255, 196, 196, 196),
                 onPressed: () {
                   if (kDebugMode) {
                     print("Creating Hunter");
@@ -447,58 +400,5 @@ class _HunterPageState extends State<HunterPage> {
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       );
     });
-  }
-}
-
-enum GearType { weapon, hat, armor, glove, shoe, belt, necklace, ring }
-
-enum GearVariant { ancient, primal, original, chaos }
-
-List<String> gearLines = [
-  ...offensiveGearLines,
-  ...survivabilityGearLines,
-];
-
-List<String> offensiveGearLines = [
-  "Increase ATK SPD by {x}%",
-  "Increase Critical Hit chance by {x}%",
-  ...racialDamageGearLines,
-  "Increase Critical Hit damage by {x}%",
-  "Increase ATK {x}%",
-];
-
-List<String> survivabilityGearLines = [
-  "Increase Evasion by {x}%",
-  "Increase HP {x}%",
-  "Increase DEF {x}%",
-  "Lifesteal {x}% of total damage",
-  "{x}% chance of decreasing damage taken by {y}%"
-];
-
-List<String> racialDamageGearLines = [
-  "Increase {x}% damage against Demon Types",
-  "Increase {x}% damage against Undead Types",
-  "Increase {x}% damage against Primate Types",
-  "Increase Against Boss type {x}% damage",
-  "Increase {x}% damage against Animal Types",
-];
-
-class GearState extends ChangeNotifier {
-  GearType gearType = GearType.hat;
-  GearVariant gearVariant = GearVariant.ancient;
-  var gearLinesOptions = gearLines;
-
-  var itemGearLines = [];
-  int lineCount = 3;
-
-  int calculateLineCountByGearVariant() {
-    if (gearVariant == GearVariant.ancient ||
-        gearVariant == GearVariant.primal) {
-      return 3;
-    } else if (gearVariant == GearVariant.original) {
-      return 4;
-    } else {
-      return 5;
-    }
   }
 }
