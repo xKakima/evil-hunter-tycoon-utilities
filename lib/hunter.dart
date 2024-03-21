@@ -135,17 +135,11 @@ class HunterItemState with ChangeNotifier {
 
   var name = "";
 
-  // void updateBaseClass(String newValue) {
-  //   baseClassDropDownValue = newValue;
-  //   secondClassDropDownValue = hunterSecondClass[baseClassDropDownValue]![0];
-  //   thirdClassDropDownValue = hunterThirdClass[baseClassDropDownValue]![0];
-  //   notifyListeners();
-  // }
-
   void updateDropdownValues(String newValue) {
     baseClassDropDownValue = newValue.toString();
     secondClassDropDownValue = hunterSecondClass[newValue.toString()]![0];
     thirdClassDropDownValue = hunterThirdClass[newValue.toString()]![0];
+    notifyListeners();
   }
 
   void updateItemStateValues(
