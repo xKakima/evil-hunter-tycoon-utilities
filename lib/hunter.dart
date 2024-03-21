@@ -133,28 +133,36 @@ class HunterItemState with ChangeNotifier {
 
   var name = "";
 
-  void updateBaseClass(String newValue) {
-    baseClassDropDownValue = newValue;
-    secondClassDropDownValue = hunterSecondClass[baseClassDropDownValue]![0];
-    thirdClassDropDownValue = hunterThirdClass[baseClassDropDownValue]![0];
+  void updateDropdownValues(String newValue) {
+    baseClassDropDownValue = newValue.toString();
+    secondClassDropDownValue = hunterSecondClass[newValue.toString()]![0];
+    thirdClassDropDownValue = hunterThirdClass[newValue.toString()]![0];
     notifyListeners();
   }
 
-  void updateItemStateValues(index, BuildContext context) {
+  void updateItemStateValues(
+      BuildContext context, int index, String? baseClass) {
     print("Index: $index");
-    var hunterState = context.watch<HunterState>();
+    var hunterState = context.read<HunterState>();
     print("Hunters Length: ${hunterState.hunters.length}");
     if (index < hunterState.hunters.length) {
       print("Updating Item State Values");
+
+      if (baseClass != null) {
+        baseClassDropDownValue = baseClass;
+      } else {
+        baseClassDropDownValue = hunterState.hunters[index].baseClass;
+      }
       name = hunterState.hunters[index].name;
-      baseClassDropDownValue = hunterState.hunters[index].baseClass;
       secondClassDropDownValue = hunterState.hunters[index].secondClass;
       thirdClassDropDownValue = hunterState.hunters[index].thirdClass;
 
       print("🟢 Name: $name");
       print("🔵 Base Class: $baseClassDropDownValue");
-      print("🟡 Second Class: $secondClassDropDownValue");
-      print("🔴 Third Class: $thirdClassDropDownValue");
+      print(
+          "🟡 Expected Second Classes: ${hunterSecondClass[baseClassDropDownValue]!}");
+      print(
+          "🔴 Expected Third Classes: ${hunterThirdClass[baseClassDropDownValue]!}");
       notifyListeners();
     }
   }
@@ -184,16 +192,20 @@ class HunterBuilderState extends State<HunterBuilder> {
         itemCount: hunterState.hunters.length,
         itemBuilder: (context, index) {
           return ChangeNotifierProvider(
-            create: (context) => HunterItemState(),
+            create: (context) {
+              var hunterItemState = HunterItemState();
+              hunterItemState.updateItemStateValues(context, index, null);
+              return hunterItemState;
+            },
             child: Consumer<HunterItemState>(
               builder: (context, hunterItemState, child) {
-                print("!!!!Updating Item State Values");
-                hunterItemState.updateItemStateValues(index, context);
-                print("~~~Updated Item State Values");
-                print(
-                    "hunterItemState.secondClassDropDownValue, ${hunterItemState.secondClassDropDownValue}");
-                print(
-                    "hunterItemState.thirdClassDropDownValue, ${hunterItemState.thirdClassDropDownValue}");
+                // print("!!!!Updating Item State Values");
+                // hunterItemState.updateItemStateValues(context, index, null);
+                // print("~~~Updated Item State Values");
+                // print(
+                //     "hunterItemState.secondClassDropDownValue, ${hunterItemState.secondClassDropDownValue}");
+                // print(
+                //     "hunterItemState.thirdClassDropDownValue, ${hunterItemState.thirdClassDropDownValue}");
                 final inputFieldController = TextEditingController(
                     text: index < hunterState.hunters.length
                         ? hunterState.hunters[index].name
@@ -224,7 +236,18 @@ class HunterBuilderState extends State<HunterBuilder> {
                         isExpanded: true,
                         value: hunterItemState.baseClassDropDownValue,
                         onChanged: (newValue) {
-                          hunterItemState.updateBaseClass(newValue.toString());
+                          hunterItemState
+                              .updateDropdownValues(newValue.toString());
+                          // void updateDropdownValues(
+                          //     HunterItemState hunterItemState,
+                          //     String newValue) {
+                          //   hunterItemState.baseClassDropDownValue =
+                          //       newValue.toString();
+                          //   hunterItemState.secondClassDropDownValue =
+                          //       hunterSecondClass[newValue.toString()]![0];
+                          //   hunterItemState.thirdClassDropDownValue =
+                          //       hunterThirdClass[newValue.toString()]![0];
+                          // }
                         },
                         items: hunterBaseClass
                             .map<DropdownMenuItem<String>>((String key) {
