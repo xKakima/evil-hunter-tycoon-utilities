@@ -135,28 +135,42 @@ class HunterItemState with ChangeNotifier {
 
   var name = "";
 
-  void updateBaseClass(String newValue) {
-    baseClassDropDownValue = newValue;
-    secondClassDropDownValue = hunterSecondClass[baseClassDropDownValue]![0];
-    thirdClassDropDownValue = hunterThirdClass[baseClassDropDownValue]![0];
-    notifyListeners();
+  // void updateBaseClass(String newValue) {
+  //   baseClassDropDownValue = newValue;
+  //   secondClassDropDownValue = hunterSecondClass[baseClassDropDownValue]![0];
+  //   thirdClassDropDownValue = hunterThirdClass[baseClassDropDownValue]![0];
+  //   notifyListeners();
+  // }
+
+  void updateDropdownValues(String newValue) {
+    baseClassDropDownValue = newValue.toString();
+    secondClassDropDownValue = hunterSecondClass[newValue.toString()]![0];
+    thirdClassDropDownValue = hunterThirdClass[newValue.toString()]![0];
   }
 
-  void updateItemStateValues(index, BuildContext context) {
+  void updateItemStateValues(
+      BuildContext context, int index, String? baseClass) {
     print("Index: $index");
-    var hunterState = context.watch<HunterState>();
+    var hunterState = context.read<HunterState>();
     print("Hunters Length: ${hunterState.hunters.length}");
     if (index < hunterState.hunters.length) {
       print("Updating Item State Values");
+
+      if (baseClass != null) {
+        baseClassDropDownValue = baseClass;
+      } else {
+        baseClassDropDownValue = hunterState.hunters[index].baseClass;
+      }
       name = hunterState.hunters[index].name;
-      baseClassDropDownValue = hunterState.hunters[index].baseClass;
       secondClassDropDownValue = hunterState.hunters[index].secondClass;
       thirdClassDropDownValue = hunterState.hunters[index].thirdClass;
 
       print("🟢 Name: $name");
       print("🔵 Base Class: $baseClassDropDownValue");
-      print("🟡 Second Class: $secondClassDropDownValue");
-      print("🔴 Third Class: $thirdClassDropDownValue");
+      print(
+          "🟡 Expected Second Classes: ${hunterSecondClass[baseClassDropDownValue]!}");
+      print(
+          "🔴 Expected Third Classes: ${hunterThirdClass[baseClassDropDownValue]!}");
       notifyListeners();
     }
   }
@@ -188,16 +202,20 @@ class HunterBuilderState extends State<HunterBuilder> {
         itemCount: hunterState.hunters.length,
         itemBuilder: (context, index) {
           return ChangeNotifierProvider(
-            create: (context) => HunterItemState(),
+            create: (context) {
+              var hunterItemState = HunterItemState();
+              hunterItemState.updateItemStateValues(context, index, null);
+              return hunterItemState;
+            },
             child: Consumer<HunterItemState>(
               builder: (context, hunterItemState, child) {
-                print("!!!!Updating Item State Values");
-                hunterItemState.updateItemStateValues(index, context);
-                print("~~~Updated Item State Values");
-                print(
-                    "hunterItemState.secondClassDropDownValue, ${hunterItemState.secondClassDropDownValue}");
-                print(
-                    "hunterItemState.thirdClassDropDownValue, ${hunterItemState.thirdClassDropDownValue}");
+                // print("!!!!Updating Item State Values");
+                // hunterItemState.updateItemStateValues(context, index, null);
+                // print("~~~Updated Item State Values");
+                // print(
+                //     "hunterItemState.secondClassDropDownValue, ${hunterItemState.secondClassDropDownValue}");
+                // print(
+                //     "hunterItemState.thirdClassDropDownValue, ${hunterItemState.thirdClassDropDownValue}");
                 final inputFieldController = TextEditingController(
                     text: index < hunterState.hunters.length
                         ? hunterState.hunters[index].name
@@ -228,7 +246,18 @@ class HunterBuilderState extends State<HunterBuilder> {
                         isExpanded: true,
                         value: hunterItemState.baseClassDropDownValue,
                         onChanged: (newValue) {
-                          hunterItemState.updateBaseClass(newValue.toString());
+                          hunterItemState
+                              .updateDropdownValues(newValue.toString());
+                          // void updateDropdownValues(
+                          //     HunterItemState hunterItemState,
+                          //     String newValue) {
+                          //   hunterItemState.baseClassDropDownValue =
+                          //       newValue.toString();
+                          //   hunterItemState.secondClassDropDownValue =
+                          //       hunterSecondClass[newValue.toString()]![0];
+                          //   hunterItemState.thirdClassDropDownValue =
+                          //       hunterThirdClass[newValue.toString()]![0];
+                          // }
                         },
                         items: hunterBaseClass
                             .map<DropdownMenuItem<String>>((String key) {
@@ -280,14 +309,6 @@ class HunterBuilderState extends State<HunterBuilder> {
                                   hunterItemState.secondClassDropDownValue,
                               thirdClass:
                                   hunterItemState.thirdClassDropDownValue,
-                              // stats: {
-                              //   "HP": 0,
-                              //   "Attack": 0,
-                              //   "Defense": 0,
-                              //   "CritChance": 0,
-                              //   "AttackSpeed": 0,
-                              //   "Evasion": 0,
-                              // }
                             );
                             print("Current Hunter: $currentWidgetHunter");
                             hunterState.saveHunter(
@@ -305,54 +326,6 @@ class HunterBuilderState extends State<HunterBuilder> {
             ),
           );
         },
-      ),
-    );
-  }
-}
-
-class Gear extends StatefulWidget {
-  const Gear({super.key});
-
-  @override
-  State<Gear> createState() => _GearState();
-}
-
-class _GearState extends State<Gear> {
-  GearType? gearDropDownValue;
-
-  @override
-  Widget build(BuildContext context) {
-    var gearState = context.watch<GearState>();
-
-    gearDropDownValue ??= gearState.gearType;
-    return Expanded(
-      child: Column(
-        children: [
-          Expanded(
-              child: DropdownButtonFormField<GearType>(
-            isExpanded: true,
-            value: gearDropDownValue,
-            onChanged: (newValue) {
-              setState(() {
-                if (kDebugMode) {
-                  print("previous Value $gearDropDownValue");
-                }
-                gearDropDownValue = newValue!;
-                if (kDebugMode) {
-                  print("new Value $gearDropDownValue");
-                }
-              });
-            },
-            items: GearType.values
-                .map<DropdownMenuItem<GearType>>((GearType value) {
-              return DropdownMenuItem<GearType>(
-                value: value,
-                child: Center(
-                    child: Text(capitalize(value.toString().split('.').last))),
-              );
-            }).toList(),
-          )),
-        ],
       ),
     );
   }
@@ -447,58 +420,5 @@ class _HunterPageState extends State<HunterPage> {
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       );
     });
-  }
-}
-
-enum GearType { weapon, hat, armor, glove, shoe, belt, necklace, ring }
-
-enum GearVariant { ancient, primal, original, chaos }
-
-List<String> gearLines = [
-  ...offensiveGearLines,
-  ...survivabilityGearLines,
-];
-
-List<String> offensiveGearLines = [
-  "Increase ATK SPD by {x}%",
-  "Increase Critical Hit chance by {x}%",
-  ...racialDamageGearLines,
-  "Increase Critical Hit damage by {x}%",
-  "Increase ATK {x}%",
-];
-
-List<String> survivabilityGearLines = [
-  "Increase Evasion by {x}%",
-  "Increase HP {x}%",
-  "Increase DEF {x}%",
-  "Lifesteal {x}% of total damage",
-  "{x}% chance of decreasing damage taken by {y}%"
-];
-
-List<String> racialDamageGearLines = [
-  "Increase {x}% damage against Demon Types",
-  "Increase {x}% damage against Undead Types",
-  "Increase {x}% damage against Primate Types",
-  "Increase Against Boss type {x}% damage",
-  "Increase {x}% damage against Animal Types",
-];
-
-class GearState extends ChangeNotifier {
-  GearType gearType = GearType.hat;
-  GearVariant gearVariant = GearVariant.ancient;
-  var gearLinesOptions = gearLines;
-
-  var itemGearLines = [];
-  int lineCount = 3;
-
-  int calculateLineCountByGearVariant() {
-    if (gearVariant == GearVariant.ancient ||
-        gearVariant == GearVariant.primal) {
-      return 3;
-    } else if (gearVariant == GearVariant.original) {
-      return 4;
-    } else {
-      return 5;
-    }
   }
 }

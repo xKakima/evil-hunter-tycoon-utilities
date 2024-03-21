@@ -31,8 +31,8 @@ Future<void> main() async {
 
   runApp(
     ChangeNotifierProvider(
-      create: (context) => EHTState()
-        ..setClassData(baseClasses, secondClasses, thirdClasses),
+      create: (context) =>
+          EHTState()..setClassData(baseClasses, secondClasses, thirdClasses),
       child: const EHTApp(),
     ),
   );
@@ -43,7 +43,8 @@ class EHTState extends ChangeNotifier {
   Map<String, String>? secondClasses;
   Map<String, String>? thirdClasses;
 
-  void setClassData (Map<String, String> base, Map<String, String> second, Map<String, String> third) {
+  void setClassData(Map<String, String> base, Map<String, String> second,
+      Map<String, String> third) {
     baseClasses = base;
     secondClasses = second;
     thirdClasses = third;
@@ -61,7 +62,7 @@ class HunterClassParsers {
   }
 
   //TODO: Implement the parser for second and third classes
-  Map<String, List<String> > secondClassParser(List<Map<String, dynamic>> list) {
+  Map<String, List<String>> secondClassParser(List<Map<String, dynamic>> list) {
     var result = <String, List<String>>{};
     for (var item in list) {
       result[item['name']] = item['id'];
@@ -85,7 +86,7 @@ class _EHTAppState extends State<EHTApp> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => HunterState()),
-        ChangeNotifierProvider(create: (context) => GearState()),
+        // ChangeNotifierProvider(create: (context) => GearState()),
         // Add more providers as needed
       ],
       child: MaterialApp(
@@ -148,7 +149,7 @@ class _MainAppPageState extends State<MainAppPage> {
       appBar: AppBar(
         title: Text('EHT Utilities by Kakima - ${pageTitles[selectedIndex]}'),
         foregroundColor: Colors.black,
-        backgroundColor: Color.fromRGBO(101,135,172,1.0),
+        backgroundColor: Color.fromRGBO(101, 135, 172, 1.0),
       ),
       drawer: Drawer(
         child: ListView(
