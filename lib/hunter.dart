@@ -169,7 +169,7 @@ class HunterItemState with ChangeNotifier {
 }
 
 class HunterBuilder extends StatefulWidget {
-  HunterBuilder({Key? key}) : super(key: key);
+  const HunterBuilder({Key? key}) : super(key: key);
 
   @override
   State<HunterBuilder> createState() => HunterBuilderState();

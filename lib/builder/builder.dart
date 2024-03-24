@@ -82,25 +82,25 @@ List<String> racialDamageGearLines = [
   "Increase {x}% damage against Animal Types",
 ];
 
-class GearState extends ChangeNotifier {
-  GearType gearType = GearType.hat;
-  GearVariant gearVariant = GearVariant.ancient;
-  var gearLinesOptions = gearLines;
+// class GearState extends ChangeNotifier {
+//   GearType gearType = GearType.hat;
+//   GearVariant gearVariant = GearVariant.ancient;
+//   var gearLinesOptions = gearLines;
 
-  var itemGearLines = [];
-  int lineCount = 3;
+//   var itemGearLines = [];
+//   int lineCount = 3;
 
-  int calculateLineCountByGearVariant() {
-    if (gearVariant == GearVariant.ancient ||
-        gearVariant == GearVariant.primal) {
-      return 3;
-    } else if (gearVariant == GearVariant.original) {
-      return 4;
-    } else {
-      return 5;
-    }
-  }
-}
+//   int calculateLineCountByGearVariant() {
+//     if (gearVariant == GearVariant.ancient ||
+//         gearVariant == GearVariant.primal) {
+//       return 3;
+//     } else if (gearVariant == GearVariant.original) {
+//       return 4;
+//     } else {
+//       return 5;
+//     }
+//   }
+// }
 
 class BuilderPage extends StatefulWidget {
   const BuilderPage({Key? key}) : super(key: key);

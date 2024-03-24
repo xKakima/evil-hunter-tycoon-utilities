@@ -1,15 +1,13 @@
 import 'dart:async';
-import 'package:evil_hunter_tycoon_utilities/gear/gear.dart';
 import 'package:evil_hunter_tycoon_utilities/database/classes.dart';
 import 'package:evil_hunter_tycoon_utilities/builder/builder.dart';
+import 'package:evil_hunter_tycoon_utilities/gear/gear.dart';
 import 'package:evil_hunter_tycoon_utilities/login.dart';
 import 'package:evil_hunter_tycoon_utilities/utils.dart';
+import 'package:evil_hunter_tycoon_utilities/hunter.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
-// import './home.dart';
-import 'hunter.dart';
 
 Future<void> main() async {
   await Supabase.initialize(
@@ -70,7 +68,7 @@ class _EHTAppState extends State<EHTApp> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => HunterState()),
-        // ChangeNotifierProvider(create: (context) => GearState()),
+        ChangeNotifierProvider(create: (context) => GearState()),
         // Add more providers as needed
       ],
       child: MaterialApp(
@@ -149,7 +147,7 @@ class _MainAppPageState extends State<MainAppPage> {
       appBar: AppBar(
         title: Text('EHT Utilities by Kakima - ${pageTitles[selectedIndex]}'),
         foregroundColor: Colors.black,
-        backgroundColor: const Color.fromRGBO(101, 135, 172, 1.0),
+        backgroundColor: Color.fromRGBO(101, 135, 172, 1.0),
       ),
       drawer: Drawer(
         child: ListView(
