@@ -48,15 +48,22 @@ END $$;
 
 DO $$ 
 BEGIN 
-  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'gear_type') THEN 
-    CREATE TYPE eht.gear_type AS ENUM ('Weapon', 'Hat', 'Armor', 'Glove', 'Shoe', 'Belt', 'Necklace', 'Ring'); 
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'gear_slot') THEN 
+    CREATE TYPE eht.gear_slot AS ENUM ('Weapon', 'Hat', 'Armor', 'Glove', 'Shoe', 'Belt', 'Necklace', 'Ring'); 
   END IF; 
 END $$;
 
 DO $$ 
 BEGIN 
-  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'gear_variant') THEN 
-    CREATE TYPE eht.gear_variant AS ENUM ('Ancient', 'Primal', 'Original', 'Chaos'); 
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'gear_type') THEN 
+    CREATE TYPE eht.gear_type AS ENUM ('Ancient', 'Primal', 'Original', 'Chaos'); 
+  END IF; 
+END $$;
+
+DO $$ 
+BEGIN 
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'gear_rarity') THEN 
+    CREATE TYPE eht.gear_rarity AS ENUM ('Poor', 'Common', 'Uncommon', 'Advanced', 'Ultimate'); 
   END IF; 
 END $$;
 
@@ -145,13 +152,16 @@ SELECT create_crud_policy_with_reference('eht.stats', 'eht.hunters', 'hunter_id'
 
 CREATE TABLE IF NOT EXISTS eht.gears (
     id UUID NOT NULL DEFAULT uuid_generate_v4 (),
-    hunter_id UUID NOT NULL,
+    user_id UUID NOT NULL,
+    hunter_id UUID,
     name varchar(255) NOT NULL,
-    gear_type eht.gear_type NOT NULL DEFAULT 'Weapon',
-    variant eht.gear_variant NOT NULL DEFAULT 'Ancient',
+    gear_slot eht.gear_slot NOT NULL DEFAULT 'Weapon',
+    gear_type eht.gear_type NOT NULL DEFAULT 'Ancient',
+    gear_rarity eht.gear_rarity
     created_at timestamp without time zone NOT NULL DEFAULT now (),
     updated_at timestamp without time zone NOT NULL DEFAULT now (),
     CONSTRAINT gears_pkey PRIMARY KEY (id),
+    CONSTRAINT fk_users FOREIGN KEY (user_id) REFERENCES auth.users (id),
     CONSTRAINT fk_hunters FOREIGN KEY (hunter_id) REFERENCES eht.hunters (hunter_id) ON DELETE SET NULL
 );
 ALTER TABLE eht.gears ENABLE ROW LEVEL SECURITY;

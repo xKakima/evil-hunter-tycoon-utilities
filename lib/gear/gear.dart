@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_print
 
+import 'package:evil_hunter_tycoon_utilities/database/gear_table.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -142,6 +143,11 @@ class StatLine {
   Widget widget;
 
   StatLine({required this.statName, required this.value, required this.widget});
+
+  @override
+  String toString() {
+    return 'StatLine: {statName: $statName, value: $value}\n';
+  }
 }
 
 class GearItemState with ChangeNotifier {
@@ -157,17 +163,17 @@ class GearItemState with ChangeNotifier {
   String pinkOptionGearLine = "";
   var gearLinesOptions = gearLines;
 
+  GearType prevGearType = GearType.ancient;
+
   var itemGearLines = [];
   int lineCount = 3;
 
   void calculateLineCountByGearVariant() {
     if (gearType == GearType.ancient || gearType == GearType.primal) {
       lineCount = 3;
-    }
-    // else if (gearType == GearType.original) {
-    //   lineCount = 4;
-    // }
-    else {
+    } else if (gearType == GearType.chaos) {
+      lineCount = 5;
+    } else {
       lineCount = 4;
     }
     print("Line Count: $lineCount");
@@ -194,22 +200,27 @@ class GearItemState with ChangeNotifier {
 
   void changeItemType(GearType newType) {
     print("Old Gear Type: $gearType");
+    prevGearType = gearType;
     gearType = newType;
 
-    if (gearType == GearType.chaos && pinkOptionGearLine.isEmpty) {
-      addPinkOptionLine();
-    } else if (!(gearType == GearType.chaos) && pinkOptionGearLine.isNotEmpty) {
-      statLines.removeAt(0);
-    }
     print("New Gear Type: $gearType");
 
     generateStatLines();
     print("Generated Stat Lines: $statLines");
-    notifyListeners();
   }
 
   void generateStatLines() {
     calculateLineCountByGearVariant();
+
+    if (prevGearType != GearType.chaos &&
+        gearType == GearType.chaos &&
+        pinkOptionGearLine.isEmpty) {
+      addPinkOptionLine();
+    } else if (gearType != GearType.chaos && pinkOptionGearLine.isNotEmpty) {
+      print("Will Remove Pink Option Line");
+      pinkOptionGearLine = "";
+      statLines.removeAt(0);
+    }
 
     if (statLines.isEmpty) {
       addStatLineTemplate();
@@ -224,11 +235,13 @@ class GearItemState with ChangeNotifier {
           "Stat lines is less. Current: ${statLines.length} Expected Line Count: $lineCount");
       addStatLines(lineCount - statLines.length);
     }
+    notifyListeners();
   }
 
   void addPinkOptionLine() {
     List<String> pinkOptions = pinkOptionsPerGear[gearSlot]!;
     String statLineName = pinkOptions[0];
+    pinkOptionGearLine = statLineName;
     Widget newStatLine = Column(children: [
       //Add dropdown here with value of gearLines
       DropdownButtonFormField<String>(
@@ -236,6 +249,7 @@ class GearItemState with ChangeNotifier {
         value: statLineName,
         onChanged: (newValue) {
           print("New Value: $newValue");
+          pinkOptionGearLine = newValue!;
           // statLines.contains(element)
           // setState(() {
           //   if (kDebugMode) {
@@ -266,6 +280,8 @@ class GearItemState with ChangeNotifier {
     //Add at index 0
     statLines.insert(
         0, StatLine(statName: statLineName, value: 0, widget: newStatLine));
+
+    print("Stat Lines: $statLines");
   }
 
   void addStatLines(int count) {
@@ -337,21 +353,21 @@ class _GearPageState extends State<GearPage> {
     super.didChangeDependencies();
 
     if (!_fetchedGears) {
-      // var gearState = context.read<GearState>();
+      var gearState = context.read<GearState>();
 
-      // var response = await fetchHunters(context);
-      // print(response);
-      // print("is gears empty: ${response.isEmpty}");
+      var response = await fetchGears();
+      print(response);
+      print("is gears empty: ${response.isEmpty}");
 
-      // if (response.isEmpty) {
-      //   Future.microtask(() => gearState.createHunter());
-      // } else {
-      //   for (var gear in response) {
-      //     gears.add(Hunter.fromJson(gear, context.read<EHTState>()));
-      //   }
-      //   gearState.saveHuntersFromDatabase(gears);
-      //   print(gearState.gears);
-      // }
+      if (response.isEmpty) {
+        Future.microtask(() => gearState.createGearTemplate());
+      } else {
+        for (var gear in response) {
+          // gears.add(Gear.fromJson(gear, context.read<EHTState>()));
+        }
+        // gearState.saveHuntersFromDatabase(gears);
+        print(gearState.gears);
+      }
 
       _fetchedGears = true;
     }
